@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stary Teller</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="importmap">
+        {
+          "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"
+          }
+        }
+    </script>
+</head>
+<body>
+    <audio autoplay loop>
+        <source src="main_bgm.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <div id="background"></div>
+    <div id="background-overlay"></div>
+    <button id="homeButton" class="scrollButton">Home</button>
+    <button id="startButton" class="scrollButton">Start</button>
+    <button id="infoButton" class="scrollButton">Information</button>
+    <button id="contactButton" class="scrollButton">Contact</button>
+    <button id="backButton">Back</button>
+    <button id="selectButton">Select</button>
+    <div id="instruction">Instruction<br><span style='font-size: 20px'>(recommend using full screen.)</span><br>⭠ ⭡ ⭢ ⭣ : Move<br>'a' key: Select a planet<br>'s' key: exit from planet information</div>
+    <div id="exoinfo"></div>
+    <div id ="hostinfo"></div>
+    <div id="exo1info"><span style="font-size: 40px">Exo Planet<br>:51 Pegasi b</span><br><br>Distance: 48ly<br>Mass: 0.472±0.039 M_Jupiter<br>Radius: 1.27±0.02 R_Jupiter<br>Orbital radius: 0.0527Au<br>Orbital period: 4.31 days<br>The first non-Pulsar exoplanet discovered on a typical star</div>
+    <div id="exo2info"><span style="font-size: 40px">Exo Planet<br>:HD 100546 b</span><br><br>Distance: 353ly<br>Mass: 1~25 M_Jupiter<br>Radius: about 6.71 R_Jupiter<br>Orbital radius: 53±2 AU<br>Orbital period: 249.2 years<br>HD 100546 b is a gas giant exoplanet that orbits a B-type star.</div>
+    <div id="exo3info"><span style="font-size: 40px">Exo Planet<br>:HD 119445 b</span><br><br>Distance: 911ly<br>Mass: 37.6 M_Jupiter<br>Radius: 0.9078 R_Jupiter<br>Orbital radius: 1.71 AU<br>Orbital period: 410.2 days<br>An exoplanet found by a project called East- Asian planet search network in 2009</div>
+    <div id="exo4info"><span style="font-size: 40px">Exo Planet<br>:OGLE-2003-BLG-235Lb</span><br><br>Distance: 18908ly<br>Mass: 2.6 M_Jupiter<br>Radius: UNKNOWN<br>Orbital radius: 4.3 AU<br>Orbital period: 11.2 years<br>A exoplanet discovered by the gravitational lensing effect that occurs when a planet passes in front of its parent star.</div>
+    <div id="exo5info"><span style="font-size: 40px">Exo Planet<br>:ProximaCentauri b</span><br><br>Distance: 4.2ly<br>Mass: 1.07±0.06 M_Earth<br>Radius: 1.17±0.23 R_Earth<br>Orbital radius: 0.04856 AU<br>Orbital period: 11.18 days<br>An exoplanet belonging to the nearest star, Proxima Centauri.</div>
+    <div id="exo6info"><span style="font-size: 40px">Exo Planet<br>:PSR B1257+12c</span><br><br>Distance: 1956±326ly<br>Mass: 4.3±0.2 M_Earth<br>Orbital radius: 0.36Au<br>Orbital period: 66days<br>The first exoplanet to be discovered</div>
+    <div id="exo7info"><span style="font-size: 40px">Exo Planet<br>:SWEEPS-4 b</span><br><br>Distance: 27710ly<br>Mass: 3.8 M_Jupiter<br>Radius: 0.81 R_Jupiter<br>Orbital radius: 0.055 AU<br>Orbital period: 4.2 days<br>The most distant exoplanet, discovered by the Sagittarius Window Eclipsing Program (SWEEPS) and named for it.</div>
+    <div id="exo8info"><span style="font-size: 40px">Exo Planet<br>:TRAPPIST-1 e</span><br><br>Distance: 40.7ly<br>Mass: 0.692 M_Earth<br>Radius: 0.9078 R_Earth<br>Orbital radius: 0.0293 AU<br>Orbital period: 6.101 days<br>An exoplanet which orbits a brown dwarf star and is in the Goldilocks zone(the temperature at which water can exist), making it the most likely planet ever discovered to harbor water and life.</div>
+    <div id="host1info"><span style="font-size: 40px">Host Star<br>:51 Pegasi</span><br><br>Surface temperature: 5768±8K<br>Radius: 1.15 R_Sun<br>Mass: 1.09 M_Sun<br>Absolute magnitude: 4.48<br>Apparent magnitude: 5.49</div>
+    <div id="host2info"><span style="font-size: 40px">Host Star<br>:HD 100546</span><br><br>Surface temperature: 9800K<br>Radius: 1.5±0.1 R_Sun<br>Mass: 2.18±0.13 M_sun<br>Absolute magnitude: 1.51<br>Apparent magnitude: 6.68</div>
+    <div id="host3info"><span style="font-size: 40px">Host Star<br>:HD 119445</span><br><br>Surface temperature: 5083K<br>Radius: 20.5±9.3 R_Sun<br>Mass: 3.9 M_sun<br>Absolute magnitude: -0.93<br>Apparent magnitude: 6.304</div>
+    <div id="host4info"><span style="font-size: 40px">Host Star<br>:OGLE-2003-BLG-235L</span><br><br>Surface temperature: UNKNOWN<br>Spectral Type: K5<br>Radius: UNKNOWN<br>Mass: 0.63 M_Sun<br>Absolute magnitude: 5.88<br>Apparent magnitude: 19.7</div>
+    <div id="host5info"><span style="font-size: 40px">Host Star<br>:ProximaCentauri</span><br><br>Surface temperature: 2992±48K<br>Radius: 0.1542 R_Sun<br>Mass: 0.1221 M_Sun<br>Absolute magnitude: 15.60<br>Apparent magnitude: 10.43</div>
+    <div id="host6info"><span style="font-size: 40px">Host Star<br>:PSR B1257+12</span><br><br>Surface temperature: 7000~200000K<br>Radius: 10km<br>Mass: 1.4 M_Sun<br>Absolute magnitude: 12.74<br>Apparent magnitude: 22.00</div>
+    <div id="host7info"><span style="font-size: 40px">Host Star<br>:SWEEPS J175853.92-291120.6</span><br><br>Surface temperature: UNKNOWN<br>Spectral Type: F5V<br>Radius: 1.18 R_Sun<br>Mass: 1.24 M_Sun<br>Absolute magnitude: 4.15<br>Apparent magnitude: 18.8</div>
+    <div id="host8info"><span style="font-size: 40px">Host Star<br>:TRAPPIST-1</span><br><br>Surface temperature: 2566K<br>Radius: 0.1192 R_Sun<br>Mass: 0.0898 M_sun<br>Absolute magnitude: 18.32<br>Apparent magnitude: 18.798</div>
+
+    <div id="content-wrapper">
+        <div id="information">
+            <h2 id="information-title">Information</h2>
+            <div id="information-container">
+                <div class="info-box">
+                    <h3 class="info-title">1. What is Exoplanet</h3>
+                    <img src="information/image1.png" alt="Information 1 Image" class="info-photo">
+                    <p class="info-content">Exoplanet (Extrasolar planet) is any planet outside our solar system. Most of them orbits other stars, but some of them are free-floating objects in the universe. Exoplanets vary widely in size, composition, and orbital characteristics. They range from terrestrial planets (rocky like Earth and Venus) to Jovian exoplanet (gas-rich like Jupiter and Saturn). </p>
+                </div>
+                <div class="info-box">
+                    <h3 class="info-title">2. Exoplanet vs Earth</h3>
+                    <img src="information/image2.png" alt="Information 2 Image" class="info-photo">
+                    <p class="info-content">As of 2023, over 5,600 exoplanets have been discovered, and most of them are very far from Earth. Even the closest one, Proxima Centauri b, is approximately 4 light-years away. Because exoplanets are located in different positions within the galaxy, the relative positions of stars as seen from those planets would differ from how we see them on Earth. Therefore, the positions of stars in the celestial sphere as viewed from an exoplanet would change, and the constellations would appear differently. We plan to travel to another exoplanet and, while observing the celestial sphere from that planet, draw our own new constellations.</p>
+                </div>
+                <div class="info-box">
+                    <h3 class="info-title">3. Project Overview</h3>
+                    <img src="information/image3.png" alt="Information 3 Image" class="info-photo">
+                    <p class="info-content">Our project invites you on a journey beyond Earth to eight different exoplanets, where you can observe the night skies from entirely new perspectives. The celestial sphere as seen from these exoplanets unfolds in ways completely different from what we experience on Earth. In this new sky, you have the freedom to use your imagination to connect the stars and create your very own constellations. By naming and saving your constellations, we hope you will enjoy a special experience that brings you closer to the universe. Seize this opportunity to explore the mysteries of the infinite cosmos and craft your own cosmic stories</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="title-screen">
+            <div id="title">Stary Teller</div>
+        </div>
+
+        <div id="contact">
+            <div id="contact-box">
+                <h2>Contact Us</h2>
+                <p class="contact-description"><br><br>We are 12th grade from Seoul Science High School.<br>These are our contact information and each role for the project.</p>
+                <hr class="contact-divider">
+                <div id="contact-members">
+                    <div class="contact-member">
+                        <img src="member/member1.jpg" alt="Member 1" class="contact-photo">
+                        <div class="contact-info">
+                            <p class="contact-name">Dongjoo Suh</p>
+                            <p class="contact-role">Data Scientist</p>
+                            <p class="contact-email">djsuh307@gmail.com</p>
+                            <p class="contact-instagram">@ddongjoo.suh</p>
+                        </div>
+                    </div>
+                    <div class="contact-member">
+                        <img src="member/member2.jpg" alt="Member 2" class="contact-photo">
+                        <div class="contact-info">
+                            <p class="contact-name">Donggeon Kim</p>
+                            <p class="contact-role">Backend Engineer</p>
+                            <p class="contact-email">dgkim0329@gmail.com</p>
+                            <p class="contact-instagram">@kd._.geon</p>
+                        </div>
+                    </div>
+                    <div class="contact-member">
+                        <img src="member/member3.png" alt="Member 3" class="contact-photo">
+                        <div class="contact-info">
+                            <p class="contact-name">Gaon Kim</p>
+                            <p class="contact-role">Designer</p>
+                            <p class="contact-email">4umilo23@gmail.com</p>
+                            <p class="contact-instagram">@ga__a0n</p>
+                        </div>
+                    </div>
+                    <div class="contact-member">
+                        <img src="member/member4.jpg" alt="Member 4" class="contact-photo">
+                        <div class="contact-info">
+                            <p class="contact-name">Jungwoo Hong</p>
+                            <p class="contact-role">Frontend Engineer</p>
+                            <p class="contact-email">redfrienz@gmail.com</p>
+                            <p class="contact-instagram">@bargain.woo</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="empty-screen"></div>
+
+        <div id="trans-screen">
+            <button id="transButton">Start Exploring</button>
+        </div>
+
+        <div id="select-screen">
+            <div id="threejs-container"></div>
+            
+        </div>
+    </div>
+
+
+    <script>
+        function disableButtons() {
+            const buttons = document.querySelectorAll('.scrollButton');
+            buttons.forEach(button => button.disabled = true);
+        }
+
+        function enableButtons(screen) {
+            const homeButton = document.getElementById('homeButton');
+            const startButton = document.getElementById('startButton');
+            const infoButton = document.getElementById('infoButton');
+            const contactButton = document.getElementById('contactButton');
+            
+            homeButton.disabled = true;
+            startButton.disabled = true;
+            infoButton.disabled = true;
+            contactButton.disabled = true;
+            
+            if (screen === 'title-screen') {
+                startButton.disabled = false;
+                infoButton.disabled = false;
+                contactButton.disabled = false;
+            } else {
+                homeButton.disabled = false;
+            }
+        }
+
+        const contentWrapper = document.getElementById('content-wrapper');
+        contentWrapper.addEventListener('transitionend', function() {
+            const currentTransform = contentWrapper.style.transform;
+
+            if (currentTransform.includes('translateX(-100vw)') && !currentTransform.includes('translateY')) {
+                enableButtons('title-screen');
+            } else if (currentTransform.includes('translateX(0px)')) {
+                enableButtons('information');
+            } else if (currentTransform.includes('translateX(-200vw)')) {
+                enableButtons('contact');
+            } else if (currentTransform.includes('translateY(-100vh)')) {
+                enableButtons('trans-screen');
+            }
+        });
+
+        document.getElementById('homeButton').addEventListener('click', function() {
+            disableButtons();
+            contentWrapper.style.transform = 'translateX(-100vw)';
+        });
+
+        document.getElementById('startButton').addEventListener('click', function() {
+            disableButtons();
+            contentWrapper.style.transform = 'translateX(-100vw) translateY(-100vh)';
+        });
+
+        document.getElementById('infoButton').addEventListener('click', function() {
+            disableButtons();
+            contentWrapper.style.transform = 'translateX(0)';
+        });
+
+        document.getElementById('contactButton').addEventListener('click', function() {
+            disableButtons();
+            contentWrapper.style.transform = 'translateX(-200vw)';
+        });
+
+        enableButtons('title-screen');
+    </script>
+
+    <script>
+        let isBrightened = false;
+
+        document.getElementById('infoButton').addEventListener('click', function() {
+            document.getElementById('content-wrapper').style.transform = 'translateX(0)';
+        });
+
+        document.getElementById('contactButton').addEventListener('click', function() {
+            document.getElementById('content-wrapper').style.transform = 'translateX(-200vw)';
+        });
+
+        document.getElementById('startButton').addEventListener('click', function() {
+            let brightness = 0.3;
+            const intervalId = setInterval(function() {
+                if (brightness >= 0.9) {
+                    clearInterval(intervalId);
+                    isBrightened = true;
+                } else {
+                    brightness += 0.01;
+                    document.getElementById('background').style.filter = `brightness(${brightness})`;
+                }
+            }, 5);
+
+            document.getElementById('content-wrapper').style.transform = 'translateX(-100vw) translateY(-100vh)';
+        });
+
+        document.getElementById('homeButton').addEventListener('click', function() {
+            if (isBrightened) {
+                let brightness = 0.9;
+                const intervalId = setInterval(function() {
+                    if (brightness <= 0.3) {
+                        clearInterval(intervalId);
+                        isBrightened = false;
+                    } else {
+                        brightness -= 0.01;
+                        document.getElementById('background').style.filter = `brightness(${brightness})`;
+                    }
+                }, 5);
+            }
+
+            document.getElementById('content-wrapper').style.transform = 'translateX(-100vw)';
+        });
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        
+        const backButton = document.getElementById('backButton');
+        const selectButton = document.getElementById('selectButton');
+        const instruction = document.getElementById('instruction');
+        const exoinfo = document.getElementById('exoinfo');
+        const hostinfo = document.getElementById('hostinfo');
+        const exo1info = document.getElementById('exo1info');
+        const exo2info = document.getElementById('exo2info');
+        const exo3info = document.getElementById('exo3info');
+        const exo4info = document.getElementById('exo4info');
+        const exo5info = document.getElementById('exo5info');
+        const exo6info = document.getElementById('exo6info');
+        const exo7info = document.getElementById('exo7info');
+        const exo8info = document.getElementById('exo8info');
+        const host1info = document.getElementById('host1info');
+        const host2info = document.getElementById('host2info');
+        const host3info = document.getElementById('host3info');
+        const host4info = document.getElementById('host4info');
+        const host5info = document.getElementById('host5info');
+        const host6info = document.getElementById('host6info');
+        const host7info = document.getElementById('host7info');
+        const host8info = document.getElementById('host8info');
+
+
+
+        let scene, camera, renderer, milkyway, ufoModel, milkyway2, ufoModel2;
+        let ufoPosition = { x: 35, y: 5, z: -12.5 };
+        let milkywayPosition = { x: 0, y: 0, z: 0 };
+        let exoDot1Position = { x: -11, y: 22 * Math.sqrt(3) + 3, z: 22};
+        let exoDot2Position = { x: -25, y: 19 * Math.sqrt(3) + 3, z: 19};
+        let exoDot3Position = { x: -17, y: 20 * Math.sqrt(3) + 3, z: 20};
+        let exoDot4Position = { x: 4, y: -30 * Math.sqrt(3) + 3, z: -30};
+        let exoDot5Position = { x: -5, y: 25 * Math.sqrt(3) + 3, z: 25};
+        let exoDot6Position = { x: 4, y: 32.5 * Math.sqrt(3) + 3, z: 32.5};
+        let exoDot7Position = { x: 6, y: -39 * Math.sqrt(3) + 3, z: -39};
+        let exoDot8Position = { x: 2, y: 24 * Math.sqrt(3) + 3, z: 24};
+
+        let brightness_milky = 1, brightnessmulti = 0.97;
+
+        let keysPressed = {};
+        let speed = 0.04;
+        let canMove = false;
+
+        let exoDot1, exoDot1mini, exoModel1, exo1Displayed = false;
+        let exoDot2, exoDot2mini, exoModel2, exo2Displayed = false;
+        let exoDot3, exoDot3mini, exoModel3, exo3Displayed = false;
+        let exoDot4, exoDot4mini, exoModel4, exo4Displayed = false;
+        let exoDot5, exoDot5mini, exoModel5, exo5Displayed = false;
+        let exoDot6, exoDot6mini, exoModel6, exo6Displayed = false;
+        let exoDot7, exoDot7mini, exoModel7, exo7Displayed = false;
+        let exoDot8, exoDot8mini, exoModel8, exo8Displayed = false;
+
+        let exo1html = false, exo2html = false, exo3html = false, exo4html = false, exo5html = false, exo6html = false, exo7html = false, exo8html = false; 
+
+        let exoDotmin = 5, exoDotmax = 9;
+        let exoDotscale = 0.2;
+
+        let animistart = false;
+        let animistart2 = false, animistart3 = false;
+        let moveness = 0;
+
+        let earth;
+        
+
+        function initScene() {
+            scene = new THREE.Scene();
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+            camera.position.set(0, 35, 0);
+            camera.rotation.set(-Math.PI/2, 0, 0);
+
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            const container = document.getElementById('threejs-container');
+            container.innerHTML = "";
+            container.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+            scene.add(ambientLight);
+
+            const light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(0, 10, -17).normalize();
+            scene.add(light);
+
+            const loader = new THREE.TextureLoader();
+            loader.load('backgroundstar.png', function(texture) {
+                scene.background = texture;
+            });
+
+
+            const loaderGLTF = new GLTFLoader();
+
+            loaderGLTF.load('./exo/earth.glb', function (gltf) {
+                earth = gltf.scene;
+                earth.scale.set(10, 10, 10);
+                earth.position.set(0, 0, 10);
+                earth.rotation.set(-Math.PI / 3, Math.PI * 4 / 7,0);
+                scene.add(earth);
+            });
+
+
+            loaderGLTF.load('./milkyway2.glb', function(gltf) {
+                milkyway = gltf.scene;
+                milkyway.scale.set(8, 1, 8);
+                milkyway.position.set(35, 4.7, -12.5);
+                milkyway.rotation.set(-Math.PI, -0.45, 0);
+                milkyway.visible = false;
+                scene.add(milkyway);
+            });
+
+            loaderGLTF.load('./UFO-gaon.glb', function(gltf) {
+                ufoModel = gltf.scene;
+                ufoModel.scale.set(0.002, 0.002, 0.002);
+                ufoModel.position.set(ufoPosition.x, ufoPosition.y, ufoPosition.z);
+                ufoModel.visible = false;
+                scene.add(ufoModel);
+            });
+
+            loaderGLTF.load('./milkyway2.glb', function(gltf) {
+                milkyway2 = gltf.scene;
+                milkyway2.scale.set(80, 5, 80);
+                milkyway2.rotation.set(-Math.PI * 4 / 3, -0.45, 0);
+                milkyway2.position.set(milkywayPosition.x, milkywayPosition.y, milkywayPosition.z);
+                milkyway2.visible = false;
+                scene.add(milkyway2);
+            });
+
+            loaderGLTF.load('./UFO-gaon.glb', function(gltf) {
+                ufoModel2 = gltf.scene;
+                ufoModel2.scale.set(0.01, 0.01, 0.01);
+                ufoModel2.position.set(0, 1 / 2, -1 * Math.sqrt(3) / 2);
+                ufoModel2.rotation.set(-Math.PI / 3, 0, 0);
+                scene.add(ufoModel2);
+            });
+
+            loaderGLTF.load('./picket.glb', function (gltf) {
+                exoDot1 = gltf.scene;
+                exoDot1.scale.set(exoDotmin, exoDotmin, exoDotmin);
+                exoDot1.position.set(exoDot1Position.x, exoDot1Position.y, exoDot1Position.z);
+                exoDot1.rotation.set(-Math.PI, 0, 0);
+                exoDot1.visible = false;
+                scene.add(exoDot1);
+            });
+
+            loaderGLTF.load('./picket.glb', function (gltf) {
+                exoDot2 = gltf.scene;
+                exoDot2.scale.set(exoDotmin, exoDotmin, exoDotmin);
+                exoDot2.position.set(exoDot2Position.x, exoDot2Position.y, exoDot2Position.z);
+                exoDot2.rotation.set(-Math.PI, 0, 0);
+                exoDot2.visible = false;
+                scene.add(exoDot2);
+            });
+
+            loaderGLTF.load('./picket.glb', function (gltf) {
+                exoDot3 = gltf.scene;
+                exoDot3.scale.set(exoDotmin, exoDotmin, exoDotmin);
+                exoDot3.position.set(exoDot3Position.x, exoDot3Position.y, exoDot3Position.z);
+                exoDot3.rotation.set(-Math.PI, 0, 0);
+                exoDot3.visible = false;
+                scene.add(exoDot3);
+            });
+
+            loaderGLTF.load('./picket.glb', function (gltf) {
+                exoDot4 = gltf.scene;
+                exoDot4.scale.set(exoDotmin, exoDotmin, exoDotmin);
+                exoDot4.position.set(exoDot4Position.x, exoDot4Position.y, exoDot4Position.z);
+                exoDot4.rotation.set(-Math.PI, 0, 0);
+                exoDot4.visible = false;
+                scene.add(exoDot4);
+            });
+
+            loaderGLTF.load('./picket.glb', function (gltf) {
+                exoDot5 = gltf.scene;
+                exoDot5.scale.set(exoDotmin, exoDotmin, exoDotmin);
+                exoDot5.position.set(exoDot5Position.x, exoDot5Position.y, exoDot5Position.z);
+                exoDot5.rotation.set(-Math.PI, 0, 0);
+                exoDot5.visible = false;
+                scene.add(exoDot5);
+            });
+
+            loaderGLTF.load('./picket.glb', function (gltf) {
+                exoDot6 = gltf.scene;
+                exoDot6.scale.set(exoDotmin, exoDotmin, exoDotmin);
+                exoDot6.position.set(exoDot6Position.x, exoDot6Position.y, exoDot6Position.z);
+                exoDot6.rotation.set(-Math.PI, 0, 0);
+                exoDot6.visible = false;
+                scene.add(exoDot6);
+            });
+
+            loaderGLTF.load('./picket.glb', function (gltf) {
+                exoDot7 = gltf.scene;
+                exoDot7.scale.set(exoDotmin, exoDotmin, exoDotmin);
+                exoDot7.position.set(exoDot7Position.x, exoDot7Position.y, exoDot7Position.z);
+                exoDot7.rotation.set(-Math.PI, 0, 0);
+                exoDot7.visible = false;
+                scene.add(exoDot7);
+            });
+
+            loaderGLTF.load('./picket.glb', function (gltf) {
+                exoDot8 = gltf.scene;
+                exoDot8.scale.set(exoDotmin, exoDotmin, exoDotmin);
+                exoDot8.position.set(exoDot8Position.x, exoDot8Position.y, exoDot8Position.z);
+                exoDot8.rotation.set(-Math.PI, 0, 0);
+                exoDot8.visible = false;
+                scene.add(exoDot8);
+            });
+
+            loaderGLTF.load('./exoDot.glb', function(gltf) {
+                exoDot1mini = gltf.scene;
+                exoDot1mini.scale.set(1.5, 0.2, 1.5);
+                exoDot1mini.position.set(35 - 1.1, 5, -12.5 + 4.4);
+                exoDot1mini.visible = false;
+                scene.add(exoDot1mini);
+            });
+
+            loaderGLTF.load('./exoDot.glb', function(gltf) {
+                exoDot2mini = gltf.scene;
+                exoDot2mini.scale.set(1.5, 0.2, 1.5);
+                exoDot2mini.position.set(35 - 2.5, 5, -12.5 + 3.8);
+                exoDot2mini.visible = false;
+                scene.add(exoDot2mini);
+            });
+
+            loaderGLTF.load('./exoDot.glb', function(gltf) {
+                exoDot3mini = gltf.scene;
+                exoDot3mini.scale.set(1.5, 0.2, 1.5);
+                exoDot3mini.position.set(35 - 1.7, 5, -12.5 + 4);
+                exoDot3mini.visible = false;
+                scene.add(exoDot3mini);
+            });
+
+            loaderGLTF.load('./exoDot.glb', function(gltf) {
+                exoDot4mini = gltf.scene;
+                exoDot4mini.scale.set(1.5, 0.2, 1.5);
+                exoDot4mini.position.set(35 + 0.4, 5, -12.5 - 6);
+                exoDot4mini.visible = false;
+                scene.add(exoDot4mini);
+            });
+
+            loaderGLTF.load('./exoDot.glb', function(gltf) {
+                exoDot5mini = gltf.scene;
+                exoDot5mini.scale.set(1.5, 0.2, 1.5);
+                exoDot5mini.position.set(35 - 0.5, 5, -12.5 + 5);
+                exoDot5mini.visible = false;
+                scene.add(exoDot5mini);
+            });
+
+            loaderGLTF.load('./exoDot.glb', function(gltf) {
+                exoDot6mini = gltf.scene;
+                exoDot6mini.scale.set(1.5, 0.2, 1.5);
+                exoDot6mini.position.set(35 + 0.4, 5, -12.5 + 6.5);
+                exoDot6mini.visible = false;
+                scene.add(exoDot6mini);
+            });
+
+            loaderGLTF.load('./exoDot.glb', function(gltf) {
+                exoDot7mini = gltf.scene;
+                exoDot7mini.scale.set(1.5, 0.2, 1.5);
+                exoDot7mini.position.set(35 + 0.6, 5, -12.5 - 7.8);
+                exoDot7mini.visible = false;
+                scene.add(exoDot7mini);
+            });
+
+            loaderGLTF.load('./exoDot.glb', function(gltf) {
+                exoDot8mini = gltf.scene;
+                exoDot8mini.scale.set(1.5, 0.2, 1.5);
+                exoDot8mini.position.set(35 + 0.2, 5, -12.5 + 4.8);
+                exoDot8mini.visible = false;
+                scene.add(exoDot8mini);
+            });
+
+            loaderGLTF.load('./exo/exo_51Pegasib.glb', function (gltf) {
+                exoModel1 = gltf.scene;
+                exoModel1.scale.set(5, 5, 5);
+                exoModel1.position.set(0, 10, 0);
+                exoModel1.rotation.set(-Math.PI / 2, 0, 0);
+                exoModel1.visible = false;
+                scene.add(exoModel1);
+            });
+
+            loaderGLTF.load('./exo/exo_HD100546b.glb', function (gltf) {
+                exoModel2 = gltf.scene;
+                exoModel2.scale.set(5, 5, 5);
+                exoModel2.position.set(0, 10, 0);
+                exoModel2.rotation.set(-Math.PI / 2, 0, 0);
+                exoModel2.visible = false;
+                scene.add(exoModel2);
+            });
+
+            loaderGLTF.load('./exo/exo_HD119445b.glb', function (gltf) {
+                exoModel3 = gltf.scene;
+                exoModel3.scale.set(5, 5, 5);
+                exoModel3.position.set(0, 10, 0);
+                exoModel3.rotation.set(-Math.PI / 2, 0, 0);
+                exoModel3.visible = false;
+                scene.add(exoModel3);
+            });
+
+            loaderGLTF.load('./exo/exo_OGLE2003BLG235Lb.glb', function (gltf) {
+                exoModel4 = gltf.scene;
+                exoModel4.scale.set(5, 5, 5);
+                exoModel4.position.set(0, 10, 0);
+                exoModel4.rotation.set(-Math.PI / 2, 0, 0);
+                exoModel4.visible = false;
+                scene.add(exoModel4);
+            });
+
+            loaderGLTF.load('./exo/exo_ProximaCentaurib.glb', function (gltf) {
+                exoModel5 = gltf.scene;
+                exoModel5.scale.set(5, 5, 5);
+                exoModel5.position.set(0, 10, 0);
+                exoModel5.rotation.set(-Math.PI / 2, 0, 0);
+                exoModel5.visible = false;
+                scene.add(exoModel5);
+            });
+
+            loaderGLTF.load('./exo/exo_PSRB125712b.glb', function (gltf) {
+                exoModel6 = gltf.scene;
+                exoModel6.scale.set(5, 5, 5);
+                exoModel6.position.set(0, 10, 0);
+                exoModel6.rotation.set(-Math.PI / 2, 0, 0);
+                exoModel6.visible = false;
+                scene.add(exoModel6);
+            });
+
+            loaderGLTF.load('./exo/exo_SWEEPS4b.glb', function (gltf) {
+                exoModel7 = gltf.scene;
+                exoModel7.scale.set(5, 5, 5);
+                exoModel7.position.set(0, 10, 0);
+                exoModel7.rotation.set(-Math.PI / 2, 0, 0);
+                exoModel7.visible = false;
+                scene.add(exoModel7);
+            });
+
+            loaderGLTF.load('./exo/exo_TRAPPIST1e.glb', function (gltf) {
+                exoModel8 = gltf.scene;
+                exoModel8.scale.set(5, 5, 5);
+                exoModel8.position.set(0, 10, 0);
+                exoModel8.rotation.set(-Math.PI / 2, 0, 0);
+                exoModel8.visible = false;
+                scene.add(exoModel8);
+            });
+
+
+
+            animate();
+            startUpdatedAnimationLoop();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+
+        function resetCameraPosition() {
+            if (camera) {
+                camera.position.set(0, 35, 0);
+                camera.rotation.set(-Math.PI/2, 0, 0);
+            }
+        }
+
+        function updateanimiPosition_up() {
+            if (animistart2) {
+                ufoModel2.rotation.set(-Math.PI/4, 0, 0);
+                ufoModel2.position.set(0, 10 * Math.sqrt(2), moveness * moveness * (-40 + 10 * Math.sqrt(2)) + 10 - 10 * Math.sqrt(2));
+            }
+        }
+
+        function updateanimiPosition_down() {
+            if (animistart3) {
+                ufoModel2.position.set(0, ((1-moveness) * (1-moveness) * 29 + 1) / 2,  - ((1-moveness) * (1-moveness) * 29 + 1) * Math.sqrt(3) / 2);
+                ufoModel2.rotation.set(-Math.PI / 3, 0, 0);
+            }
+        }
+        
+
+        document.getElementById('transButton').addEventListener('click', function() {
+            const scrollButtons = document.querySelectorAll('.scrollButton');
+            scrollButtons.forEach(button => button.style.visibility = 'hidden');
+
+            let brightness = 1;
+            const brightnessIntervalId = setInterval(function() {
+                if (brightness <= 0) {
+                    clearInterval(brightnessIntervalId);
+                    
+                    initScene();
+                    resetCameraPosition();
+
+                    document.getElementById('content-wrapper').style.transform = 'translateX(-200vw) translateY(-100vh)'
+
+                    animistart2 = true;
+
+                    setTimeout(function() {
+                        const restoreBrightnessIntervalId = setInterval(function() {
+                            if (brightness >= 1) {
+                                clearInterval(restoreBrightnessIntervalId);
+                                const startAnimation_up = setInterval(function() {
+                                    if (moveness >= 1) {
+                                        clearInterval(startAnimation_up);
+
+                                        const brightnessIntervalId2 = setInterval(function() {
+                                            if (brightness <= 0) {
+                                                clearInterval(brightnessIntervalId2);
+                                                animistart2 = false;
+                                                moveness = 0;
+                                                exoDot1.visible = true;
+                                                exoDot2.visible = true;
+                                                exoDot3.visible = true;
+                                                exoDot4.visible = true;
+                                                exoDot5.visible = true;
+                                                exoDot6.visible = true;
+                                                exoDot7.visible = true;
+                                                exoDot8.visible = true;
+                                                exoDot1mini.visible = true;
+                                                exoDot2mini.visible = true;
+                                                exoDot3mini.visible = true;
+                                                exoDot4mini.visible = true;
+                                                exoDot5mini.visible = true;
+                                                exoDot6mini.visible = true;
+                                                exoDot7mini.visible = true;
+                                                exoDot8mini.visible = true;
+                                                milkyway.visible = true;
+                                                milkyway2.visible = true;
+                                                ufoModel.visible = true;
+                                                
+                                                earth.visible = false;
+
+                                                animistart3 = true;
+
+                                                setTimeout(function() {
+                                                    const restoreBrightnessIntervalId2 = setInterval(function() {
+                                                        if (brightness >= 1) {
+                                                            clearInterval(restoreBrightnessIntervalId2);
+
+                                                            const startAnimation_down = setInterval(function() {
+                                                                if (moveness >= 1) {
+                                                                    clearInterval(startAnimation_down);
+                                                                    canMove = true;
+                                                                    moveness = 0;
+                                                                    animistart3 = false;
+                                                                    backButton.classList.add('show');
+                                                                    instruction.classList.add('show');
+                                                                } else {
+                                                                    moveness += 0.01;
+                                                                }
+                                                            }, 20);
+
+                                                        } else {
+                                                            brightness += 0.01;
+                                                            document.body.style.filter = `brightness(${brightness})`;
+                                                        }
+                                                    }, 10);
+                                                }, 500);
+                                            } else {
+                                                brightness -= 0.01;
+                                                document.body.style.filter = `brightness(${brightness})`;
+                                            }
+                                        }, 10);
+                                    } else {
+                                        moveness += 0.01;
+                                    }
+                                }, 20);
+                            } else {
+                                brightness += 0.01;
+                                document.body.style.filter = `brightness(${brightness})`;
+                            }
+                        }, 10);
+                    }, 500);
+                } else {
+                    brightness -= 0.01;
+                    document.body.style.filter = `brightness(${brightness})`;
+                }
+            }, 10);
+        });
+
+
+        document.getElementById('backButton').addEventListener('click', function() {
+            let brightness = 1;
+            const dimIntervalId = setInterval(function() {
+                if (brightness <= 0) {
+                    clearInterval(dimIntervalId);
+                    
+                    while(scene.children.length > 0){ 
+                        scene.remove(scene.children[0]);
+                    }
+                    canMove = false;
+                    exoModel1.visible = false;
+                    exo1Displayed = false;
+                    exoModel2.visible = false;
+                    exo2Displayed = false;
+                    exoModel3.visible = false;
+                    exo3Displayed = false;
+                    exoModel4.visible = false;
+                    exo4Displayed = false;
+                    exoModel5.visible = false;
+                    exo5Displayed = false;
+                    exoModel6.visible = false;
+                    exo6Displayed = false;
+                    exoModel7.visible = false;
+                    exo7Displayed = false;
+                    exoModel8.visible = false;
+                    exo8Displayed = false;
+                    brightness_milky = 1;
+                    selectButton.classList.remove('show');
+                    exoinfo.classList.remove('show');
+                    hostinfo.classList.remove('show');
+                    exo1info.classList.remove('show');
+                    exo2info.classList.remove('show');
+                    exo3info.classList.remove('show');
+                    exo4info.classList.remove('show');
+                    exo5info.classList.remove('show');
+                    exo6info.classList.remove('show');
+                    exo7info.classList.remove('show');
+                    exo8info.classList.remove('show');
+                    host1info.classList.remove('show');
+                    host2info.classList.remove('show');
+                    host3info.classList.remove('show');
+                    host4info.classList.remove('show');
+                    host5info.classList.remove('show');
+                    host6info.classList.remove('show');
+                    host7info.classList.remove('show');
+                    host8info.classList.remove('show');
+                    resetCameraPosition();
+                    ufoPosition = { x: 35, y: 5, z: -12.5 };
+                    milkywayPosition = { x: 0, y: 0, z: 0 };
+                    exoDot1Position = { x: -11, y: 22 * Math.sqrt(3) + 3, z: 22};
+                    exoDot2Position = { x: -25, y: 19 * Math.sqrt(3) + 3, z: 19};
+                    exoDot3Position = { x: -17, y: 20 * Math.sqrt(3) + 3, z: 20};
+                    exoDot4Position = { x: 4, y: -30 * Math.sqrt(3) + 3, z: -30};
+                    exoDot5Position = { x: -5, y: 25 * Math.sqrt(3) + 3, z: 25};
+                    exoDot6Position = { x: 4, y: 32.5 * Math.sqrt(3) + 3, z: 32.5};
+                    exoDot7Position = { x: 6, y: -39 * Math.sqrt(3) + 3, z: -39};
+                    exoDot8Position = { x: 2, y: 24 * Math.sqrt(3) + 3, z: 24};
+
+                    document.getElementById('content-wrapper').style.transform = 'translateX(-100vw) translateY(-100vh)';
+
+                    
+                    backButton.classList.remove('show');
+                    instruction.classList.remove('show');
+
+                    setTimeout(function() {
+                        const restoreBrightnessIntervalId = setInterval(function() {
+                            if (brightness >= 1) {
+                                clearInterval(restoreBrightnessIntervalId);
+                                const scrollButtons = document.querySelectorAll('.scrollButton');
+                                scrollButtons.forEach(button => button.style.visibility = 'visible');
+                            } else {
+                                brightness += 0.01;
+                                document.body.style.filter = `brightness(${brightness})`;
+                            }
+                        }, 10);
+                    }, 500);
+                } else {
+                    brightness -= 0.01;
+                    document.body.style.filter = `brightness(${brightness})`;
+                }
+            }, 10);
+        });
+
+
+        window.addEventListener('resize', function() {
+            if (renderer && camera) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        });
+
+
+        document.addEventListener('keydown', function(event) {
+            keysPressed[event.key] = true;
+        });
+
+        document.addEventListener('keyup', function(event) {
+            keysPressed[event.key] = false;
+        });
+
+        function updateUfoPosition() {
+            if (ufoModel && canMove) {
+                let xDirection = 0;
+                let zDirection = 0;
+
+                if (keysPressed['ArrowUp']) {
+                    zDirection -= 1;
+                }
+                if (keysPressed['ArrowDown']) {
+                    zDirection += 1;
+                }
+                if (keysPressed['ArrowLeft']) {
+                    xDirection -= 1;
+                }
+                if (keysPressed['ArrowRight']) {
+                    xDirection += 1;
+                }
+
+                if (xDirection !== 0 && zDirection !== 0) {
+                    xDirection *= speed / Math.sqrt(2);
+                    zDirection *= speed / Math.sqrt(2);
+                } else {
+                    xDirection *= speed;
+                    zDirection *= speed;
+                }
+
+                const newUfoPosition = {
+                    x: ufoPosition.x + xDirection,
+                    y: ufoPosition.y,
+                    z: ufoPosition.z + zDirection
+                };
+
+                const distance = Math.sqrt(
+                    Math.pow(newUfoPosition.x - 35, 2) +
+                    Math.pow(newUfoPosition.y - 5, 2) +
+                    Math.pow(newUfoPosition.z + 12.5, 2)
+                );
+
+                if (distance <= 8) {
+                    ufoPosition.x += xDirection;
+                    ufoPosition.z += zDirection;
+                    milkywayPosition.x -= xDirection * 10;
+                    milkywayPosition.y -= zDirection * 5 * Math.sqrt(3);
+                    milkywayPosition.z -= zDirection * 5;
+                    exoDot1Position.x -= xDirection * 10;
+                    exoDot1Position.y -= zDirection * 5 * Math.sqrt(3);
+                    exoDot1Position.z -= zDirection * 5;
+                    exoDot2Position.x -= xDirection * 10;
+                    exoDot2Position.y -= zDirection * 5 * Math.sqrt(3);
+                    exoDot2Position.z -= zDirection * 5;
+                    exoDot3Position.x -= xDirection * 10;
+                    exoDot3Position.y -= zDirection * 5 * Math.sqrt(3);
+                    exoDot3Position.z -= zDirection * 5;
+                    exoDot4Position.x -= xDirection * 10;
+                    exoDot4Position.y -= zDirection * 5 * Math.sqrt(3);
+                    exoDot4Position.z -= zDirection * 5;
+                    exoDot5Position.x -= xDirection * 10;
+                    exoDot5Position.y -= zDirection * 5 * Math.sqrt(3);
+                    exoDot5Position.z -= zDirection * 5;
+                    exoDot6Position.x -= xDirection * 10;
+                    exoDot6Position.y -= zDirection * 5 * Math.sqrt(3);
+                    exoDot6Position.z -= zDirection * 5;
+                    exoDot7Position.x -= xDirection * 10;
+                    exoDot7Position.y -= zDirection * 5 * Math.sqrt(3);
+                    exoDot7Position.z -= zDirection * 5;
+                    exoDot8Position.x -= xDirection * 10;
+                    exoDot8Position.y -= zDirection * 5 * Math.sqrt(3);
+                    exoDot8Position.z -= zDirection * 5;
+
+
+
+                    ufoModel.position.set(ufoPosition.x, ufoPosition.y, ufoPosition.z);
+                    milkyway2.position.set(milkywayPosition.x, milkywayPosition.y, milkywayPosition.z);
+                    exoDot1.position.set(exoDot1Position.x, exoDot1Position.y, exoDot1Position.z);
+                    exoDot2.position.set(exoDot2Position.x, exoDot2Position.y, exoDot2Position.z);
+                    exoDot3.position.set(exoDot3Position.x, exoDot3Position.y, exoDot3Position.z);
+                    exoDot4.position.set(exoDot4Position.x, exoDot4Position.y, exoDot4Position.z);
+                    exoDot5.position.set(exoDot5Position.x, exoDot5Position.y, exoDot5Position.z);
+                    exoDot6.position.set(exoDot6Position.x, exoDot6Position.y, exoDot6Position.z);
+                    exoDot7.position.set(exoDot7Position.x, exoDot7Position.y, exoDot7Position.z);
+                    exoDot8.position.set(exoDot8Position.x, exoDot8Position.y, exoDot8Position.z);
+                }
+
+
+            }
+        }
+
+
+        function traverseAndAdjustBrightness(objects, brightnessMultiplier) {
+            objects.forEach(object => {
+                object.traverse(function (child) {
+                    if (child.isMesh) {
+                        child.material.color.multiplyScalar(brightnessMultiplier);
+                        if (child.material.emissive) {
+                            child.material.emissive.multiplyScalar(brightnessMultiplier);
+                        }
+                    }
+                });
+            });
+        }
+
+        function checkDistanceAndDisplayexo1() {
+            if (ufoModel2 && exoDot1) {
+                const distance = ufoModel2.position.distanceTo(exoDot1.position);
+                                
+                if (distance < 3) {
+                    if (exoDot1.scale.x < exoDotmax) {
+                        exoDot1.scale.x += exoDotscale;
+                        exoDot1.scale.y += exoDotscale;
+                        exoDot1.scale.z += exoDotscale;
+                    }
+                } else {
+                    if (exoDot1.scale.x > exoDotmin) {
+                        exoDot1.scale.x -= exoDotscale;
+                        exoDot1.scale.y -= exoDotscale;
+                        exoDot1.scale.z -= exoDotscale;
+                    }
+                }
+
+                if (distance < 3 && !exo1Displayed && keysPressed['a']) {
+                    exoModel1.visible = true;
+                    exo1Displayed = true;
+                    canMove = false;
+                    selectButton.classList.add('show');
+                    instruction.classList.remove('show');
+                    exoinfo.classList.add('show');
+                    hostinfo.classList.add('show');
+                    exo1info.classList.add('show');
+                    host1info.classList.add('show');
+
+                    const dimIntervalId = setInterval(function () {
+                        if (brightness_milky <= 0.3) {
+                            clearInterval(dimIntervalId);
+                        } else {
+                            brightness_milky -= 0.01;
+
+                            traverseAndAdjustBrightness(
+                                [
+                                    milkyway, milkyway2, exoDot1, exoDot2, exoDot3, exoDot4, exoDot5,
+                                    exoDot6, exoDot7, exoDot8, exoDot1mini, exoDot2mini, exoDot3mini,
+                                    exoDot4mini, exoDot5mini, exoDot6mini, exoDot7mini, exoDot8mini
+                                ],
+                                brightnessmulti
+                            );
+                        }
+                    }, 5);
+                } else if (distance < 3 && exo1Displayed && keysPressed['s']) {
+                    exoModel1.visible = false;
+                    exo1Displayed = false;
+                    canMove = true;
+                    selectButton.classList.remove('show');
+                    instruction.classList.add('show');
+                    exoinfo.classList.remove('show');
+                    hostinfo.classList.remove('show');
+                    exo1info.classList.remove('show');
+                    host1info.classList.remove('show');
+
+                    const dimIntervalId = setInterval(function () {
+                        if (brightness_milky >= 1) {
+                            clearInterval(dimIntervalId);
+                        } else {
+                            brightness_milky += 0.01;
+
+                            traverseAndAdjustBrightness(
+                                [
+                                    milkyway, milkyway2, exoDot1, exoDot2, exoDot3, exoDot4, exoDot5,
+                                    exoDot6, exoDot7, exoDot8, exoDot1mini, exoDot2mini, exoDot3mini,
+                                    exoDot4mini, exoDot5mini, exoDot6mini, exoDot7mini, exoDot8mini
+                                ],
+                                1/brightnessmulti
+                            );
+                        }
+                    }, 5);
+                }
+            }
+        }
+
+        function checkDistanceAndDisplayexo2() {
+            if (ufoModel2 && exoDot2) {
+                const distance = ufoModel2.position.distanceTo(exoDot2.position);
+                
+                if (distance < 3) {
+                    if (exoDot2.scale.x < exoDotmax) {
+                        exoDot2.scale.x += exoDotscale;
+                        exoDot2.scale.y += exoDotscale;
+                        exoDot2.scale.z += exoDotscale;
+                    }
+                } else {
+                    if (exoDot2.scale.x > exoDotmin) {
+                        exoDot2.scale.x -= exoDotscale;
+                        exoDot2.scale.y -= exoDotscale;
+                        exoDot2.scale.z -= exoDotscale;
+                    }
+                }
+
+                if (distance < 3 && !exo2Displayed && keysPressed['a']) {
+                    exoModel2.visible = true;
+                    exo2Displayed = true;
+                    canMove = false;
+                    selectButton.classList.add('show');
+                    instruction.classList.remove('show');
+                    exoinfo.classList.add('show');
+                    hostinfo.classList.add('show');
+                    exo2info.classList.add('show');
+                    host2info.classList.add('show');
+
+                    const dimIntervalId = setInterval(function () {
+                        if (brightness_milky <= 0.3) {
+                            clearInterval(dimIntervalId);
+                        } else {
+                            brightness_milky -= 0.01;
+
+                            traverseAndAdjustBrightness(
+                                [
+                                    milkyway, milkyway2, exoDot1, exoDot2, exoDot3, exoDot4, exoDot5,
+                                    exoDot6, exoDot7, exoDot8, exoDot1mini, exoDot2mini, exoDot3mini,
+                                    exoDot4mini, exoDot5mini, exoDot6mini, exoDot7mini, exoDot8mini
+                                ],
+                                brightnessmulti
+                            );
+                        }
+                    }, 5);
+                } else if (distance < 3 && exo2Displayed && keysPressed['s']) {
+                    exoModel2.visible = false;
+                    exo2Displayed = false;
+                    canMove = true;
+                    selectButton.classList.remove('show');
+                    instruction.classList.add('show');
+                    exoinfo.classList.remove('show');
+                    hostinfo.classList.remove('show');
+                    exo2info.classList.remove('show');
+                    host2info.classList.remove('show');
+
+                    const dimIntervalId = setInterval(function () {
+                        if (brightness_milky >= 1) {
+                            clearInterval(dimIntervalId);
+                        } else {
+                            brightness_milky += 0.01;
+
+                            traverseAndAdjustBrightness(
+                                [
+                                    milkyway, milkyway2, exoDot1, exoDot2, exoDot3, exoDot4, exoDot5,
+                                    exoDot6, exoDot7, exoDot8, exoDot1mini, exoDot2mini, exoDot3mini,
+                                    exoDot4mini, exoDot5mini, exoDot6mini, exoDot7mini, exoDot8mini
+                                ],
+                                1/brightnessmulti
+                            );
+                        }
+                    }, 5);
+                }
+            }
+        }
+
+        function checkDistanceAndDisplayexo3() {
+            if (ufoModel2 && exoDot3) {
+                const distance = ufoModel2.position.distanceTo(exoDot3.position);
+                
+                if (distance < 3) {
+                    if (exoDot3.scale.x < exoDotmax) {
+                        exoDot3.scale.x += exoDotscale;
+                        exoDot3.scale.y += exoDotscale;
+                        exoDot3.scale.z += exoDotscale;
+                    }
+                } else {
+                    if (exoDot3.scale.x > exoDotmin) {
+                        exoDot3.scale.x -= exoDotscale;
+                        exoDot3.scale.y -= exoDotscale;
+                        exoDot3.scale.z -= exoDotscale;
+                    }
+                }
+
+                if (distance < 3 && !exo3Displayed && keysPressed['a']) {
+                    exoModel3.visible = true;
+                    exo3Displayed = true;
+                    canMove = false;
+                    selectButton.classList.add('show');
+                    instruction.classList.remove('show');
+                    exoinfo.classList.add('show');
+                    hostinfo.classList.add('show');
+                    exo3info.classList.add('show');
+                    host3info.classList.add('show');
+
+                    const dimIntervalId = setInterval(function () {
+                        if (brightness_milky <= 0.3) {
+                            clearInterval(dimIntervalId);
+                        } else {
+                            brightness_milky -= 0.01;
+
+                            traverseAndAdjustBrightness(
+                                [
+                                    milkyway, milkyway2, exoDot1, exoDot2, exoDot3, exoDot4, exoDot5,
+                                    exoDot6, exoDot7, exoDot8, exoDot1mini, exoDot2mini, exoDot3mini,
+                                    exoDot4mini, exoDot5mini, exoDot6mini, exoDot7mini, exoDot8mini
+                                ],
+                                brightnessmulti
+                            );
+                        }
+                    }, 5);
+                } else if (distance < 3 && exo3Displayed && keysPressed['s']) {
+                    exoModel3.visible = false;
+                    exo3Displayed = false;
+                    canMove = true;
+                    selectButton.classList.remove('show');
+                    instruction.classList.add('show');
+                    exoinfo.classList.remove('show');
+                    hostinfo.classList.remove('show');
+                    exo3info.classList.remove('show');
+                    host3info.classList.remove('show');
+
+                    const dimIntervalId = setInterval(function () {
+                        if (brightness_milky >= 1) {
+                            clearInterval(dimIntervalId);
+                        } else {
+                            brightness_milky += 0.01;
+
+                            traverseAndAdjustBrightness(
+                                [
+                                    milkyway, milkyway2, exoDot1, exoDot2, exoDot3, exoDot4, exoDot5,
+                                    exoDot6, exoDot7, exoDot8, exoDot1mini, exoDot2mini, exoDot3mini,
+                                    exoDot4mini, exoDot5mini, exoDot6mini, exoDot7mini, exoDot8mini
+                                ],
+                                1/brightnessmulti
+                            );
+                        }
+                    }, 5);
+                }
+            }
+        }
+
+        function checkDistanceAndDisplayexo4() {
+            if (ufoModel2 && exoDot4) {
+                const distance = ufoModel2.position.distanceTo(exoDot4.position);
+                
+                if (distance < 3) {
+                    if (exoDot4.scale.x < exoDotmax) {
+                        exoDot4.scale.x += exoDotscale;
+                        exoDot4.scale.y += exoDotscale;
+                        exoDot4.scale.z += exoDotscale;
+                    }
+                } else {
+                    if (exoDot4.scale.x > exoDotmin) {
+                        exoDot4.scale.x -= exoDotscale;
+                        exoDot4.scale.y -= exoDotscale;
+                        exoDot4.scale.z -= exoDotscale;
+                    }
+                }
+
+                if (distance < 3 && !exo4Displayed && keysPressed['a']) {
+                    exoModel4.visible = true;
+                    exo4Displayed = true;
+                    canMove = false;
+                    selectButton.classList.add('show');
+                    instruction.classList.remove('show');
+                    exoinfo.classList.add('show');
+                    hostinfo.classList.add('show');
+                    exo4info.classList.add('show');
+                    host4info.classList.add('show');
+
+                    const dimIntervalId = setInterval(function () {
+                        if (brightness_milky <= 0.3) {
+                            clearInterval(dimIntervalId);
+                        } else {
+                            brightness_milky -= 0.01;
+
+                            traverseAndAdjustBrightness(
+                                [
+                                    milkyway, milkyway2, exoDot1, exoDot2, exoDot3, exoDot4, exoDot5,
+                                    exoDot6, exoDot7, exoDot8, exoDot1mini, exoDot2mini, exoDot3mini,
+                                    exoDot4mini, exoDot5mini, exoDot6mini, exoDot7mini, exoDot8mini
+                                ],
+                                brightnessmulti
+                            );
+                        }
+                    }, 5);
+                } else if (distance < 3 && exo4Displayed && keysPressed['s']) {
+                    exoModel4.visible = false;
+                    exo4Displayed = false;
+                    canMove = true;
+                    selectButton.classList.remove('show');
+                    instruction.classList.add('show');
+                    exoinfo.classList.remove('show');
+                    hostinfo.classList.remove('show');
+                    exo4info.classList.remove('show');
+                    host4info.classList.remove('show');
+
+                    const dimIntervalId = setInterval(function () {
+                        if (brightness_milky >= 1) {
+                            clearInterval(dimIntervalId);
+                        } else {
+                            brightness_milky += 0.01;
+
+                            traverseAndAdjustBrightness(
+                                [
+                                    milkyway, milkyway2, exoDot1, exoDot2, exoDot3, exoDot4, exoDot5,
+                                    exoDot6, exoDot7, exoDot8, exoDot1mini, exoDot2mini, exoDot3mini,
+                                    exoDot4mini, exoDot5mini, exoDot6mini, exoDot7mini, exoDot8mini
+                                ],
+                                1/brightnessmulti
+                            );
+                        }
+                    }, 5);
+                }
+            }
+        }
+
+        function checkDistanceAndDisplayexo5() {
+            if (ufoModel2 && exoDot5) {
+                const distance = ufoModel2.position.distanceTo(exoDot5.position);
+                
+                if (distance < 3) {
+                    if (exoDot5.scale.x < exoDotmax) {
+                        exoDot5.scale.x += exoDotscale;
+                        exoDot5.scale.y += exoDotscale;
+                        exoDot5.scale.z += exoDotscale;
+                    }
+                } else {
+                    if (exoDot5.scale.x > exoDotmin) {
+                        exoDot5.scale.x -= exoDotscale;
+                        exoDot5.scale.y -= exoDotscale;
+                        exoDot5.scale.z -= exoDotscale;
+                    }
+                }
+
+                if (distance < 3 && !exo5Displayed && keysPressed['a']) {
+                    exoModel5.visible = true;
+                    exo5Displayed = true;
+                    canMove = false;
+                    selectButton.classList.add('show');
+                    instruction.classList.remove('show');
+                    exoinfo.classList.add('show');
+                    hostinfo.classList.add('show');
+                    exo5info.classList.add('show');
+                    host5info.classList.add('show');
+
+                    const dimIntervalId = setInterval(function () {
+                        if (brightness_milky <= 0.3) {
+                            clearInterval(dimIntervalId);
+                        } else {
+                            brightness_milky -= 0.01;
+
+                            traverseAndAdjustBrightness(
+                                [
+                                    milkyway, milkyway2, exoDot1, exoDot2, exoDot3, exoDot4, exoDot5,
+                                    exoDot6, exoDot7, exoDot8, exoDot1mini, exoDot2mini, exoDot3mini,
+                                    exoDot4mini, exoDot5mini, exoDot6mini, exoDot7mini, exoDot8mini
+                                ],
+                                brightnessmulti
+                            );
+                        }
+                    }, 5);
+                } else if (distance < 3 && exo5Displayed && keysPressed['s']) {
+                    exoModel5.visible = false;
+                    exo5Displayed = false;
+                    canMove = true;
+                    selectButton.classList.remove('show');
+                    instruction.classList.add('show');
+                    exoinfo.classList.remove('show');
+                    hostinfo.classList.remove('show');
+                    exo5info.classList.remove('show');
+                    host5info.classList.remove('show');
+
+                    const dimIntervalId = setInterval(function () {
+                        if (brightness_milky >= 1) {
+                            clearInterval(dimIntervalId);
+                        } else {
+                            brightness_milky += 0.01;
+
+                            traverseAndAdjustBrightness(
+                                [
+                                    milkyway, milkyway2, exoDot1, exoDot2, exoDot3, exoDot4, exoDot5,
+                                    exoDot6, exoDot7, exoDot8, exoDot1mini, exoDot2mini, exoDot3mini,
+                                    exoDot4mini, exoDot5mini, exoDot6mini, exoDot7mini, exoDot8mini
+                                ],
+                                1/brightnessmulti
+                            );
+                        }
+                    }, 5);
+                }
+            }
+        }
+
+        function checkDistanceAndDisplayexo6() {
+            if (ufoModel2 && exoDot6) {
+                const distance = ufoModel2.position.distanceTo(exoDot6.position);
+
+                if (distance < 3) {
+                    if (exoDot6.scale.x < exoDotmax) {
+                        exoDot6.scale.x += exoDotscale;
+                        exoDot6.scale.y += exoDotscale;
+                        exoDot6.scale.z += exoDotscale;
+                    }
+                } else {
+                    if (exoDot6.scale.x > exoDotmin) {
+                        exoDot6.scale.x -= exoDotscale;
+                        exoDot6.scale.y -= exoDotscale;
+                        exoDot6.scale.z -= exoDotscale;
+                    }
+                }
+
+                if (distance < 3 && !exo6Displayed && keysPressed['a']) {
+                    exoModel6.visible = true;
+                    exo6Displayed = true;
+                    canMove = false;
+                    selectButton.classList.add('show');
+                    instruction.classList.remove('show');
+                    exoinfo.classList.add('show');
+                    hostinfo.classList.add('show');
+                    exo6info.classList.add('show');
+                    host6info.classList.add('show');
+
+                    const dimIntervalId = setInterval(function () {
+                        if (brightness_milky <= 0.3) {
+                            clearInterval(dimIntervalId);
+                        } else {
+                            brightness_milky -= 0.01;
+
+                            traverseAndAdjustBrightness(
+                                [
+                                    milkyway, milkyway2, exoDot1, exoDot2, exoDot3, exoDot4, exoDot5,
+                                    exoDot6, exoDot7, exoDot8, exoDot1mini, exoDot2mini, exoDot3mini,
+                                    exoDot4mini, exoDot5mini, exoDot6mini, exoDot7mini, exoDot8mini
+                                ],
+                                brightnessmulti
+                            );
+                        }
+                    }, 5);
+                } else if (distance < 3 && exo6Displayed && keysPressed['s']) {
+                    exoModel6.visible = false;
+                    exo6Displayed = false;
+                    canMove = true;
+                    selectButton.classList.remove('show');
+                    instruction.classList.add('show');
+                    exoinfo.classList.remove('show');
+                    hostinfo.classList.remove('show');
+                    exo6info.classList.remove('show');
+                    host6info.classList.remove('show');
+
+                    const dimIntervalId = setInterval(function () {
+                        if (brightness_milky >= 1) {
+                            clearInterval(dimIntervalId);
+                        } else {
+                            brightness_milky += 0.01;
+
+                            traverseAndAdjustBrightness(
+                                [
+                                    milkyway, milkyway2, exoDot1, exoDot2, exoDot3, exoDot4, exoDot5,
+                                    exoDot6, exoDot7, exoDot8, exoDot1mini, exoDot2mini, exoDot3mini,
+                                    exoDot4mini, exoDot5mini, exoDot6mini, exoDot7mini, exoDot8mini
+                                ],
+                                1/brightnessmulti
+                            );
+                        }
+                    }, 5);
+                }
+            }
+        }
+
+        function checkDistanceAndDisplayexo7() {
+            if (ufoModel2 && exoDot7) {
+                const distance = ufoModel2.position.distanceTo(exoDot7.position);
+                
+                if (distance < 3) {
+                    if (exoDot7.scale.x < exoDotmax) {
+                        exoDot7.scale.x += exoDotscale;
+                        exoDot7.scale.y += exoDotscale;
+                        exoDot7.scale.z += exoDotscale;
+                    }
+                } else {
+                    if (exoDot7.scale.x > exoDotmin) {
+                        exoDot7.scale.x -= exoDotscale;
+                        exoDot7.scale.y -= exoDotscale;
+                        exoDot7.scale.z -= exoDotscale;
+                    }
+                }
+
+                if (distance < 3 && !exo7Displayed && keysPressed['a']) {
+                    exoModel7.visible = true;
+                    exo7Displayed = true;
+                    canMove = false;
+                    selectButton.classList.add('show');
+                    instruction.classList.remove('show');
+                    exoinfo.classList.add('show');
+                    hostinfo.classList.add('show');
+                    exo7info.classList.add('show');
+                    host7info.classList.add('show');
+
+                    const dimIntervalId = setInterval(function () {
+                        if (brightness_milky <= 0.3) {
+                            clearInterval(dimIntervalId);
+                        } else {
+                            brightness_milky -= 0.01;
+
+                            traverseAndAdjustBrightness(
+                                [
+                                    milkyway, milkyway2, exoDot1, exoDot2, exoDot3, exoDot4, exoDot5,
+                                    exoDot6, exoDot7, exoDot8, exoDot1mini, exoDot2mini, exoDot3mini,
+                                    exoDot4mini, exoDot5mini, exoDot6mini, exoDot7mini, exoDot8mini
+                                ],
+                                brightnessmulti
+                            );
+                        }
+                    }, 5);
+                } else if (distance < 3 && exo7Displayed && keysPressed['s']) {
+                    exoModel7.visible = false;
+                    exo7Displayed = false;
+                    canMove = true;
+                    selectButton.classList.remove('show');
+                    instruction.classList.add('show');
+                    exoinfo.classList.remove('show');
+                    hostinfo.classList.remove('show');
+                    exo7info.classList.remove('show');
+                    host7info.classList.remove('show');
+
+
+                    const dimIntervalId = setInterval(function () {
+                        if (brightness_milky >= 1) {
+                            clearInterval(dimIntervalId);
+                        } else {
+                            brightness_milky += 0.01;
+
+                            traverseAndAdjustBrightness(
+                                [
+                                    milkyway, milkyway2, exoDot1, exoDot2, exoDot3, exoDot4, exoDot5,
+                                    exoDot6, exoDot7, exoDot8, exoDot1mini, exoDot2mini, exoDot3mini,
+                                    exoDot4mini, exoDot5mini, exoDot6mini, exoDot7mini, exoDot8mini
+                                ],
+                                1/brightnessmulti
+                            );
+                        }
+                    }, 5);
+                }
+            }
+        }
+
+        function checkDistanceAndDisplayexo8() {
+            if (ufoModel2 && exoDot8) {
+                const distance = ufoModel2.position.distanceTo(exoDot8.position);
+                
+                if (distance < 3) {
+                    if (exoDot8.scale.x < exoDotmax) {
+                        exoDot8.scale.x += exoDotscale;
+                        exoDot8.scale.y += exoDotscale;
+                        exoDot8.scale.z += exoDotscale;
+                    }
+                } else {
+                    if (exoDot8.scale.x > exoDotmin) {
+                        exoDot8.scale.x -= exoDotscale;
+                        exoDot8.scale.y -= exoDotscale;
+                        exoDot8.scale.z -= exoDotscale;
+                    }
+                }
+
+                if (distance < 3 && !exo8Displayed && keysPressed['a']) {
+                    exoModel8.visible = true;
+                    exo8Displayed = true;
+                    canMove = false;
+                    selectButton.classList.add('show');
+                    instruction.classList.remove('show');
+                    exoinfo.classList.add('show');
+                    hostinfo.classList.add('show');
+                    exo8info.classList.add('show');
+                    host8info.classList.add('show');
+
+                    const dimIntervalId = setInterval(function () {
+                        if (brightness_milky <= 0.3) {
+                            clearInterval(dimIntervalId);
+                        } else {
+                            brightness_milky -= 0.01;
+
+                            traverseAndAdjustBrightness(
+                                [
+                                    milkyway, milkyway2, exoDot1, exoDot2, exoDot3, exoDot4, exoDot5,
+                                    exoDot6, exoDot7, exoDot8, exoDot1mini, exoDot2mini, exoDot3mini,
+                                    exoDot4mini, exoDot5mini, exoDot6mini, exoDot7mini, exoDot8mini
+                                ],
+                                brightnessmulti
+                            );
+                        }
+                    }, 5);
+                } else if (distance < 3 && exo8Displayed && keysPressed['s']) {
+                    exoModel8.visible = false;
+                    exo8Displayed = false;
+                    canMove = true;
+                    selectButton.classList.remove('show');
+                    instruction.classList.add('show');
+                    exoinfo.classList.remove('show');
+                    hostinfo.classList.remove('show');
+                    exo8info.classList.remove('show');
+                    host8info.classList.remove('show');
+
+                    const dimIntervalId = setInterval(function () {
+                        if (brightness_milky >= 1) {
+                            clearInterval(dimIntervalId);
+                        } else {
+                            brightness_milky += 0.01;
+
+                            traverseAndAdjustBrightness(
+                                [
+                                    milkyway, milkyway2, exoDot1, exoDot2, exoDot3, exoDot4, exoDot5,
+                                    exoDot6, exoDot7, exoDot8, exoDot1mini, exoDot2mini, exoDot3mini,
+                                    exoDot4mini, exoDot5mini, exoDot6mini, exoDot7mini, exoDot8mini
+                                ],
+                                1/brightnessmulti
+                            );
+                        }
+                    }, 5);
+                }
+            }
+        }
+
+        function updateanimiPosition() {
+            if (animistart) {
+                if (exo1Displayed) {
+                    exoModel1.visible = true;
+                    exoModel1.scale.set(10, 10, 10);
+                    exoModel1.position.set(0, 0, 10);
+                    exo1Displayed = false;
+                    exo1html = true;
+                }
+                if (exo2Displayed) {
+                    exoModel2.visible = true;
+                    exoModel2.scale.set(10, 10, 10);
+                    exoModel2.position.set(0, 0, 10);
+                    exo2Displayed = false;
+                    exo2html = true;
+                }
+                if (exo3Displayed) {
+                    exoModel3.visible = true;
+                    exoModel3.scale.set(10, 10, 10);
+                    exoModel3.position.set(0, 0, 10);
+                    exo3Displayed = false;
+                    exo3html = true;
+                }
+                if (exo4Displayed) {
+                    exoModel4.visible = true;
+                    exoModel4.scale.set(10, 10, 10);
+                    exoModel4.position.set(0, 0, 10);
+                    exo4Displayed = false;
+                    exo4html = true;
+                }
+                if (exo5Displayed) {
+                    exoModel5.visible = true;
+                    exoModel5.scale.set(10, 10, 10);
+                    exoModel5.position.set(0, 0, 10);
+                    exo5Displayed = false;
+                    exo5html = true;
+                }
+                if (exo6Displayed) {
+                    exoModel6.visible = true;
+                    exoModel6.scale.set(10, 10, 10);
+                    exoModel6.position.set(0, 0, 10);
+                    exo6Displayed = false;
+                    exo6html = true;
+                }
+                if (exo7Displayed) {
+                    exoModel7.visible = true;
+                    exoModel7.scale.set(10, 10, 10);
+                    exoModel7.position.set(0, 0, 10);
+                    exo7Displayed = false;
+                    exo7html = true;
+                }
+                if (exo8Displayed) {
+                    exoModel8.visible = true;
+                    exoModel8.scale.set(10, 10, 10);
+                    exoModel8.position.set(0, 0, 10);
+                    exo8Displayed = false;
+                    exo8html = true;
+                }
+
+                ufoModel2.rotation.set(-Math.PI/4, 0, 0);
+                ufoModel2.position.set(0, 10 * Math.sqrt(2), (moveness - 1) * (moveness - 1) * (-40 + 10 * Math.sqrt(2)) + 10 - 10 * Math.sqrt(2));
+            }
+        }
+
+        selectButton.addEventListener('click', function() {
+            let brightness = 1;
+            const brightnessIntervalId = setInterval(function() {
+                if (brightness <= 0) {
+                    clearInterval(brightnessIntervalId);
+
+                    canMove = false;
+                    animistart = true;
+                    backButton.classList.remove('show');
+                    instruction.classList.remove('show');
+                    selectButton.classList.remove('show');
+                    exoModel1.visible = false;
+                    exoModel2.visible = false;
+                    exoModel3.visible = false;
+                    exoModel4.visible = false;
+                    exoModel5.visible = false;
+                    exoModel6.visible = false;
+                    exoModel7.visible = false;
+                    exoModel8.visible = false;
+                    exoinfo.classList.remove('show');
+                    hostinfo.classList.remove('show');
+                    exo1info.classList.remove('show');
+                    exo2info.classList.remove('show');
+                    exo3info.classList.remove('show');
+                    exo4info.classList.remove('show');
+                    exo5info.classList.remove('show');
+                    exo6info.classList.remove('show');
+                    exo7info.classList.remove('show');
+                    exo8info.classList.remove('show');
+                    host1info.classList.remove('show');
+                    host2info.classList.remove('show');
+                    host3info.classList.remove('show');
+                    host4info.classList.remove('show');
+                    host5info.classList.remove('show');
+                    host6info.classList.remove('show');
+                    host7info.classList.remove('show');
+                    host8info.classList.remove('show');
+                    exoDot1.visible = false;
+                    exoDot2.visible = false;
+                    exoDot3.visible = false;
+                    exoDot4.visible = false;
+                    exoDot5.visible = false;
+                    exoDot6.visible = false;
+                    exoDot7.visible = false;
+                    exoDot8.visible = false;
+                    exoDot1mini.visible = false;
+                    exoDot2mini.visible = false;
+                    exoDot3mini.visible = false;
+                    exoDot4mini.visible = false;
+                    exoDot5mini.visible = false;
+                    exoDot6mini.visible = false;
+                    exoDot7mini.visible = false;
+                    exoDot8mini.visible = false;
+                    milkyway.visible = false;
+                    milkyway2.visible = false;
+                    ufoModel.visible = false;
+                    setTimeout(function() {
+                        const restoreBrightnessIntervalId = setInterval(function() {
+                            if (brightness >= 1) {
+                                clearInterval(restoreBrightnessIntervalId);
+
+                                const startAnimation = setInterval(function() {
+                                    if (moveness >= 1) {
+                                        clearInterval(startAnimation);
+                                        
+                                        const movetonextHtml = setInterval(function() {
+                                            if (brightness <= 0) {
+                                                clearInterval(movetonextHtml);
+                                                
+                                                if (exo1html) {
+                                                    window.location.href = 'skyview/exo_51Pegasib.html';
+                                                }
+                                                if (exo2html) {
+                                                    window.location.href = 'skyview/exo_HD100546b.html';
+                                                }
+                                                if (exo3html) {
+                                                    window.location.href = 'skyview/exo_HD119445b.html';
+                                                }
+                                                if (exo4html) {
+                                                    window.location.href = 'skyview/exo_OGLE2003BLG235Lb.html';
+                                                }
+                                                if (exo5html) {
+                                                    window.location.href = 'skyview/exo_ProximaCentaurib.html';
+                                                }
+                                                if (exo6html) {
+                                                    window.location.href = 'skyview/exo_PSRB125712b.html';
+                                                }
+                                                if (exo7html) {
+                                                    window.location.href = 'skyview/exo_SWEEPS4b.html';
+                                                }
+                                                if (exo8html) {
+                                                    window.location.href = 'skyview/exo_TRAPPIST1e.html';
+                                                }
+                                            } else {
+                                                brightness -= 0.01;
+                                                document.body.style.filter = `brightness(${brightness})`;
+                                            }
+                                        })
+
+                                    } else {
+                                        moveness += 0.01;
+                                    }
+                                }, 20);
+
+                            } else {
+                                brightness += 0.01;
+                                document.body.style.filter = `brightness(${brightness})`;
+                            }
+                        }, 10);
+                    }, 500);
+                } else {
+                    brightness -= 0.01;
+                    document.body.style.filter = `brightness(${brightness})`;
+                }
+            }, 10);
+
+        });
+
+        function rotateexo1() {
+            if (exoModel1 && exo1Displayed) {
+                exoModel1.rotation.y += 0.005;
+            }
+        }
+
+        function rotateexo2() {
+            if (exoModel2 && exo2Displayed) {
+                exoModel2.rotation.y += 0.005;
+            }
+        }
+
+        function rotateexo3() {
+            if (exoModel3 && exo3Displayed) {
+                exoModel3.rotation.y += 0.005;
+            }
+        }
+
+        function rotateexo4() {
+            if (exoModel4 && exo4Displayed) {
+                exoModel4.rotation.y += 0.005;
+            }
+        }
+
+        function rotateexo5() {
+            if (exoModel5 && exo5Displayed) {
+                exoModel5.rotation.y += 0.005;
+            }
+        }
+
+        function rotateexo6() {
+            if (exoModel6 && exo6Displayed) {
+                exoModel6.rotation.y += 0.005;
+            }
+        }
+
+        function rotateexo7() {
+            if (exoModel7 && exo7Displayed) {
+                exoModel7.rotation.y += 0.005;
+            }
+        }
+
+        function rotateexo8() {
+            if (exoModel8 && exo8Displayed) {
+                exoModel8.rotation.y += 0.005;
+            }
+        }
+
+
+
+        function startUpdatedAnimationLoop() {
+            if (renderer && scene && camera) {
+                updatedRunAnimation();
+            } else {
+                setTimeout(startUpdatedAnimationLoop, 100);
+            }
+        }
+
+        function updatedRunAnimation() {
+            requestAnimationFrame(updatedRunAnimation);
+            updateUfoPosition();
+            updateanimiPosition();
+            updateanimiPosition_up();
+            updateanimiPosition_down();
+            checkDistanceAndDisplayexo1();
+            checkDistanceAndDisplayexo2();
+            checkDistanceAndDisplayexo3();
+            checkDistanceAndDisplayexo4();
+            checkDistanceAndDisplayexo5();
+            checkDistanceAndDisplayexo6();
+            checkDistanceAndDisplayexo7();
+            checkDistanceAndDisplayexo8();
+            rotateexo1();
+            rotateexo2();
+            rotateexo3();
+            rotateexo4();
+            rotateexo5();
+            rotateexo6();
+            rotateexo7();
+            rotateexo8();
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+
+        const contentWrapper2 = document.getElementById('content-wrapper');
+        contentWrapper2.addEventListener('transitionend', function() {
+            const currentTransform = contentWrapper2.style.transform;
+
+            if (!currentTransform.includes('translateX(-200vw)') && !currentTransform.includes('translateY(-100vh)')) {
+                const scrollButtons = document.querySelectorAll('.scrollButton');
+                scrollButtons.forEach(button => button.style.visibility = 'visible');
+            }
+        });
+
+
+    </script>
+</body>
+</html>
