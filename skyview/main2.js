@@ -635,13 +635,13 @@ window.addEventListener('keydown', (event) => {
 let blinkingStarIndex = null;
 let isConstellationVisible = true;
 
-let ownConstellationData = JSON.parse(localStorage.getItem('ownConstellation')) || [];
+let ownConstellationData = JSON.parse(localStorage.getItem('ownConstellation2')) || [];
 
 let selectedStars = [];
 
 // Function to save astronaut data to local storage
 function saveOwnConstellationData() {
-    localStorage.setItem('ownConstellation', JSON.stringify(ownConstellationData));
+    localStorage.setItem('ownConstellation2', JSON.stringify(ownConstellationData));
 }
 
 let groupedLines = {};
@@ -823,7 +823,7 @@ resetButton.style.cursor = 'pointer';
 modalContent.appendChild(resetButton);
 
 loadButton.addEventListener('click', () => {
-    ownConstellationData = JSON.parse(localStorage.getItem('ownConstellation')) || [];
+    ownConstellationData = JSON.parse(localStorage.getItem('ownConstellation2')) || [];
     if (!Array.isArray(ownConstellationData)) {
         ownConstellationData = [];
     }
@@ -832,8 +832,8 @@ loadButton.addEventListener('click', () => {
 });
 
 resetButton.addEventListener('click', () => {
-    localStorage.removeItem('ownConstellation');
-    localStorage.removeItem('constellationNames');
+    localStorage.removeItem('ownConstellation2');
+    localStorage.removeItem('constellationNames2');
     ownConstellationData = [];
     constellationNamesData = [];
     raDecGroup.children = raDecGroup.children.filter(child => !(child instanceof THREE.Line && child.material.color.equals(new THREE.Color(0x00ff00))));
@@ -1017,7 +1017,7 @@ addButton.style.fontWeight = 'bold';
 constellationNameModal.appendChild(addButton);
 
 // Create a list of names (load from local storage)
-let constellationNamesData = JSON.parse(localStorage.getItem('constellationNames')) || [];
+let constellationNamesData = JSON.parse(localStorage.getItem('constellationNames2')) || [];
 const nameList = [...new Set(constellationNamesData.map(data => data.name))];
 nameList.sort();
 const nameButtons = [];
@@ -1117,7 +1117,7 @@ function saveConstellationName(name, blinkingCircles) {
 
 // Function to save constellation name data to local storage
 function saveConstellationNamesData() {
-    localStorage.setItem('constellationNames', JSON.stringify(constellationNamesData));
+    localStorage.setItem('constellationNames2', JSON.stringify(constellationNamesData));
 }
 
 window.addEventListener('keydown', (event) => {
