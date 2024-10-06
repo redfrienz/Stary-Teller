@@ -179,7 +179,7 @@ function plotConstellations() {
     plotSky(stars); 
 
     if (showConstellations) {
-        const constellationData = JSON.parse(localStorage.getItem('ownConstellation')) || [];
+        const constellationData = JSON.parse(localStorage.getItem('ownConstellation1')) || [];
         constellationData.forEach(pair => {
             const star1 = stars[pair.starIndex1];
             const star2 = stars[pair.starIndex2];
