@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addRaDecLines();
         animate();
         setMapVisibilityState(false);
-        addMilkyWayTexture(192.86, 27.128, 284.27);
+        addMilkyWayTexture(192.86, 27.128, 265.3);
 
         loadingOverlay.style.display = 'none';
     }
