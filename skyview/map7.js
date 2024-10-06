@@ -134,58 +134,58 @@ window.addEventListener('DOMContentLoaded', () => {
     function updateMap() {
         chartGroup.selectAll("*").remove();
       
-        for (let i = 0; i <= 360; i += 15) {
-            const adjustedRa = (i - raOffset + 360) % 360;
+        // for (let i = 0; i <= 360; i += 15) {
+        //     const adjustedRa = (i - raOffset + 360) % 360;
 
-            chartGroup.append("text")
-                .attr("x", raScale(i))
-                .attr("y", height + 15)
-                .attr("text-anchor", "middle")
-                .text(adjustedRa + "°");
+        // //     chartGroup.append("text")
+        // //         .attr("x", raScale(i))
+        // //         .attr("y", height + 15)
+        // //         .attr("text-anchor", "middle")
+        // //         .text(adjustedRa + "°");
           
-            if (adjustedRa >= 0 && adjustedRa <= 360) {
-                chartGroup.append("text")
-                    .attr("x", raScale(i))
-                    .attr("y", -5)
-                    .attr("text-anchor", "middle")
-                    .text(adjustedRa + "°");
-            }
-        }
+        // //     if (adjustedRa >= 0 && adjustedRa <= 360) {
+        // //         chartGroup.append("text")
+        // //             .attr("x", raScale(i))
+        // //             .attr("y", -5)
+        // //             .attr("text-anchor", "middle")
+        // //             .text(adjustedRa + "°");
+        // //     }
+        // // }
 
-        for (let i = -90; i <= 90; i += 15) {
-            chartGroup.append("text")
-                .attr("x", -20)
-                .attr("y", decScale(i))
-                .attr("text-anchor", "end")
-                .attr("alignment-baseline", "middle")
-                .text(i + "°");
+        // // for (let i = -90; i <= 90; i += 15) {
+        // //     chartGroup.append("text")
+        // //         .attr("x", -20)
+        // //         .attr("y", decScale(i))
+        // //         .attr("text-anchor", "end")
+        // //         .attr("alignment-baseline", "middle")
+        // //         .text(i + "°");
 
-            chartGroup.append("text")
-                .attr("x", width + 5)
-                .attr("y", decScale(i))
-                .attr("alignment-baseline", "middle")
-                .text(i + "°");
-        }
+        // //     chartGroup.append("text")
+        // //         .attr("x", width + 5)
+        // //         .attr("y", decScale(i))
+        // //         .attr("alignment-baseline", "middle")
+        // //         .text(i + "°");
+        // // }
 
-        for (let i = 0; i <= 360; i += 15) {
-            chartGroup.append("line")
-                .attr("x1", raScale(i))
-                .attr("y1", 0)
-                .attr("x2", raScale(i))
-                .attr("y2", height)
-                .attr("stroke", "gray")
-                .attr("stroke-width", 0.5);
-        }
+        // // for (let i = 0; i <= 360; i += 15) {
+        // //     chartGroup.append("line")
+        // //         .attr("x1", raScale(i))
+        // //         .attr("y1", 0)
+        // //         .attr("x2", raScale(i))
+        // //         .attr("y2", height)
+        // //         .attr("stroke", "gray")
+        // //         .attr("stroke-width", 0.5);
+        // // }
 
-        for (let i = -90; i <= 90; i += 15) {
-            chartGroup.append("line")
-                .attr("x1", 0)
-                .attr("y1", decScale(i))
-                .attr("x2", width)
-                .attr("y2", decScale(i))
-                .attr("stroke", "gray")
-                .attr("stroke-width", 0.5);
-        }
+        // // for (let i = -90; i <= 90; i += 15) {
+        // //     chartGroup.append("line")
+        // //         .attr("x1", 0)
+        // //         .attr("y1", decScale(i))
+        // //         .attr("x2", width)
+        // //         .attr("y2", decScale(i))
+        // //         .attr("stroke", "gray")
+        // //         .attr("stroke-width", 0.5);
+        // // }
 
         d3.csv(path).then(data => {
             data.forEach(d => {
@@ -195,12 +195,12 @@ window.addEventListener('DOMContentLoaded', () => {
             });
     
             chartGroup.selectAll("circle")
-                .data(data.filter(d => d.newmag < 6))
+                .data(data.filter(d => d.newmag < 9))
                 .enter()
                 .append("circle")
                 .attr("cx", d => raScale((d.newra + raOffset) % 360))
                 .attr("cy", d => decScale(d.newdec))
-                .attr("r", d => Math.max(Math.min(4, 6 * Math.exp(-0.38 * d.newmag))), 0.1)
+                .attr("r", d => Math.max(Math.min(4, 20 * Math.exp(-0.3 * d.newmag))), 0.1)
                 .attr("fill", "white")
                 .on("click", (event, d) => {
                     const clickX = raScale(d.newra);
