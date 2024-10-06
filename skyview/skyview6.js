@@ -1,51 +1,70 @@
-let showConstellations = true; // 초기 상태: 별자리가 보이도록 설정
-let stars = []; // 별 데이터를 저장할 배열
+let showConstellations = true;
+let stars = [];
 const path = './data/StarCatalogue_PSRB125712b.csv';
 
 document.addEventListener('DOMContentLoaded', () => {
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.id = 'loading';
+    loadingOverlay.style.position = 'fixed';
+    loadingOverlay.style.top = '0';
+    loadingOverlay.style.left = '0';
+    loadingOverlay.style.width = '100%';
+    loadingOverlay.style.height = '100%';
+    loadingOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    loadingOverlay.style.color = 'white';
+    loadingOverlay.style.display = 'flex';
+    loadingOverlay.style.justifyContent = 'center';
+    loadingOverlay.style.alignItems = 'center';
+    loadingOverlay.style.zIndex = '1000';
+    loadingOverlay.style.opacity = '1';
+    loadingOverlay.innerHTML = '<p>Loading, please wait...</p>';
+    document.body.appendChild(loadingOverlay);
+    
     const skyCanvas = document.getElementById('skyCanvas');
     const viewToggleButton = document.getElementById('viewToggle');
     const container = document.getElementById('container');
 
-    // 초기 상태 설정
-    skyCanvas.style.display = 'none'; // 기본적으로 3D 뷰가 활성화
+    skyCanvas.style.display = 'none';
     container.style.display = 'block';
-    viewToggleButton.textContent = 'Switch to 2D View';
+    viewToggleButton.textContent = '2D View';
 
-    // 버튼 클릭 시 2D 또는 3D 전환 로직
-    viewToggleButton.addEventListener('click', () => {
+    viewToggleButton.addEventListener('click', async () => {
+        loadingOverlay.style.display = 'flex';
+
         if (skyCanvas.style.display === 'block') {
-            // 2D에서 3D로 전환
             skyCanvas.style.display = 'none';
             container.style.display = 'block';
-            viewToggleButton.textContent = 'Switch to 2D View';
+            viewToggleButton.textContent = '2D View';
+            
+            loadingOverlay.style.display = 'none';
         } else {
-            // 3D에서 2D로 전환
             skyCanvas.style.display = 'block';
             container.style.display = 'none';
-            viewToggleButton.textContent = 'Switch to 3D View';
-            loadAndPlotSky(); // 2D 뷰로 전환 시 업데이트된 값 반영
+            viewToggleButton.textContent = '3D View';
+
+            await loadAndPlotSky();
+
+            loadingOverlay.style.display = 'none';
         }
     });
 
-    // C 키를 눌러 별자리 표시/숨기기 토글
     document.addEventListener('keydown', (event) => {
         if (event.key === 'c' || event.key === 'C') {
             showConstellations = !showConstellations;
-            plotConstellations(); // 별자리 상태에 따라 업데이트
+            plotConstellations();
         }
     });
 
-    loadAndPlotSky(); // 초기 로드 시 별 그리기
+    loadAndPlotSky().then(() => {
+        loadingOverlay.style.display = 'none';
+    });
 });
 
 async function loadAndPlotSky() {
     try {
-        // Load CSV using fetch
         const response = await fetch(path);
         const csvText = await response.text();
 
-        // Parse CSV text using d3-dsv's csvParse
         const starEq = d3.csvParse(csvText).map(d => ({
             newmag: +d.newmag,
             newra: +d.newra,
@@ -53,12 +72,11 @@ async function loadAndPlotSky() {
             name: d.name
         }));
 
-        const lat = parseFloat(localStorage.getItem('currentDec')) || 0; // 저장된 적위를 위도로 사용
-        const sid = parseFloat(localStorage.getItem('currentRa')) || 0; // 저장된 적경을 항성시로 사용
-        stars = sList(lat, sid, 180, starEq); // 별 데이터를 저장
-        plotSky(stars); // 별 그리기
+        const lat = parseFloat(localStorage.getItem('currentDec')) || 0; 
+        const sid = parseFloat(localStorage.getItem('currentRa')) || 0; 
+        stars = sList(lat, sid, 180, starEq);
+        plotSky(stars);
 
-        // 초기 상태에 따라 별자리 그리기
         if (showConstellations) {
             plotConstellations();
         }
@@ -100,7 +118,6 @@ function sList(lat, siderealTime, off, starEq) {
         let s2 = Math.cos(h) * Math.cos(d) * Math.sin(phi) - Math.sin(d) * Math.cos(phi);
         let cosA = s2 / cosa;
 
-        // Adjust with offset
         let tempSinA = sinA * Math.cos(offset) + cosA * Math.sin(offset);
         let tempCosA = cosA * Math.cos(offset) - sinA * Math.sin(offset);
         sinA = tempSinA;
@@ -120,22 +137,19 @@ function plotSky(stars) {
     const canvas = document.getElementById("skyCanvas");
     const ctx = canvas.getContext("2d");
 
-    // Set canvas size to match the window size
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-
-    // Set the background color to black
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw circle for the sky view boundary
     const centerX = canvas.width / 2;
     const centerY = canvas.height * 50.2 / 100;
-    const radius = Math.min(centerX, centerY, canvas.height - centerY) - 20; // Ensure the circle fits within the canvas
+    const radius = Math.min(centerX, centerY, canvas.height - centerY) - 20;
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-    ctx.strokeStyle = "white"; // Circle color set to white
-    ctx.lineWidth = 2; // Make the border more visible
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 2;
     ctx.stroke();
 
     // Draw the stars
@@ -143,10 +157,10 @@ function plotSky(stars) {
         if (star.x) {
             const x = centerX + star.x * radius;
             const y = centerY + star.y * radius;
-            const size = Math.min(10, 6 * Math.exp(-0.38 * star.mag)); // Scale star size by magnitude
+            const size = Math.min(10, 6 * Math.exp(-0.38 * star.mag));
             ctx.beginPath();
             ctx.arc(x, y, size, 0, 2 * Math.PI);
-            ctx.fillStyle = "white"; // Stars color set to white
+            ctx.fillStyle = "white";
             ctx.fill();
         }
     });
@@ -161,11 +175,9 @@ function plotConstellations() {
     const centerY = canvas.height * 50.2 / 100;
     const radius = Math.min(centerX, centerY, canvas.height - centerY) - 20;
 
-    // 별자리를 그릴 때마다 캔버스를 별 부분에 영향 없이 초기화
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    plotSky(stars); // 별은 그대로 유지하고 다시 그리기
+    plotSky(stars); 
 
-    // 별자리 그리기 여부 결정
     if (showConstellations) {
         const constellationData = JSON.parse(localStorage.getItem('ownConstellation')) || [];
         constellationData.forEach(pair => {
@@ -177,11 +189,10 @@ function plotConstellations() {
                 const x2 = centerX + star2.x * radius;
                 const y2 = centerY + star2.y * radius;
 
-                // Draw line between stars
                 ctx.beginPath();
                 ctx.moveTo(x1, y1);
                 ctx.lineTo(x2, y2);
-                ctx.strokeStyle = "#00ff00"; // Set line color for constellations
+                ctx.strokeStyle = "#00ff00";
                 ctx.lineWidth = 1;
                 ctx.stroke();
             }
