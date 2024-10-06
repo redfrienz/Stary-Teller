@@ -1,10 +1,12 @@
-// main.js - 기존의 Three.js 설정을 3D view에서만 실행되도록 수정합니다.
-
 import * as THREE from './js/three.module.js';
 import { OrbitControls } from './js/OrbitControls.js';
 import { csvParse } from './js/d3-dsv.module.js';
-//data 경로
+import { CSS2DRenderer, CSS2DObject } from './js/CSS2DRenderer.js';
+
+
+// Set a path to the data
 const path = './data/StarCatalogue_HD100546b.csv';
+
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 2000);
 camera.position.set(0, 0, 1);
@@ -12,7 +14,7 @@ const raDecGroup = new THREE.Group();
 const constellationLinesGroup = new THREE.Group();
 scene.add(constellationLinesGroup);
 scene.add(raDecGroup);
-scene.background = new THREE.Color(0x000000); // 배경을 검정색으로 설정
+scene.background = new THREE.Color(0x000000);
 
 let starsData;
 let stars;
@@ -26,55 +28,122 @@ controls.enableZoom = false;
 controls.enablePan = false;
 controls.rotateSpeed = 0.75;
 
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(window.innerWidth, window.innerHeight);
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.top = '0px';
+labelRenderer.domElement.style.pointerEvents = 'none';
+document.body.appendChild(labelRenderer.domElement);
+
+function setMapVisibilityState(isVisible) {
+    const event = new CustomEvent('mapVisibilityChange', { detail: { isVisible } });
+    document.dispatchEvent(event);
+}
+
+let isGalaxyVisible = true;
 
 document.addEventListener('DOMContentLoaded', () => {
-    const container = document.getElementById('container');
-    const skyCanvas = document.getElementById('skyCanvas');
-    const viewToggleButton = document.getElementById('viewToggle');
 
-    // 기본적으로 3D view를 활성화된 상태로 시작
-    container.style.display = 'block';
-    skyCanvas.style.display = 'none';
-    viewToggleButton.textContent = 'Switch to 2D View';
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.id = 'loading';
+    loadingOverlay.style.position = 'fixed';
+    loadingOverlay.style.top = '0';
+    loadingOverlay.style.left = '0';
+    loadingOverlay.style.width = '100%';
+    loadingOverlay.style.height = '100%';
+    loadingOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    loadingOverlay.style.color = 'white';
+    loadingOverlay.style.display = 'flex';
+    loadingOverlay.style.justifyContent = 'center';
+    loadingOverlay.style.alignItems = 'center';
+    loadingOverlay.style.zIndex = '1000';
+    loadingOverlay.innerHTML = '<p>Loading, please wait...</p>';
+    document.body.appendChild(loadingOverlay);
 
     async function initThreeJS() {
-        await loadStarData(); // 별 데이터를 로드할 때까지 대기
-        createStars(starsData); // 별들을 생성
-
-        // 별 데이터를 모두 로드한 후에 대원을 로드
+        await loadStarData();
+        createStars(starsData);
         loadOwnConstellation();
         addRaDecLines();
         animate();
+        setMapVisibilityState(false);
+        addMilkyWayTexture(122.932, 27.128, 80.1578);
+
+        loadingOverlay.style.display = 'none';
     }
+    
 
     initThreeJS();
 
-    // 버튼 클릭 시 2D 또는 3D 전환 로직
-    viewToggleButton.addEventListener('click', () => {
+    const container = document.getElementById('container');
+    const skyCanvas = document.getElementById('skyCanvas');
+    const viewToggleButton = document.getElementById('viewToggle');
+    const mapContainer = document.getElementById('mapContainer');
+    const mapToggleButton = document.getElementById('mapToggle');
+    mapToggleButton.textContent = 'Map';
+
+    container.style.display = 'block';
+    skyCanvas.style.display = 'none';
+    mapContainer.style.display = 'none';
+    viewToggleButton.textContent = '2D View';
+
+    // Logic for switching between 2D or 3D when the button is clicked
+    viewToggleButton.addEventListener('click', async () => {
+        loadingOverlay.style.display = 'flex';
+
         if (skyCanvas.style.display === 'none') {
-            // 2D에서 3D로 전환
             container.style.display = 'block';
             skyCanvas.style.display = 'none';
-            viewToggleButton.textContent = 'Switch to 2D View';
+            viewToggleButton.textContent = '2D View';
+            isConstellationVisible = true;
+            loadOwnConstellation();
+            loadingOverlay.style.display = 'none';
         } else {
-            // 3D에서 2D로 전환
+            // 3D to 2D
             const { ra, dec } = getCameraRaDec();
 
-            // 값을 localStorage에 저장하여 skyview.js에서 사용하도록 설정
             localStorage.setItem('currentRa', ra);
             localStorage.setItem('currentDec', dec);
-
-            // 뷰 전환
             container.style.display = 'none';
             skyCanvas.style.display = 'block';
-            viewToggleButton.textContent = 'Switch to 3D View';
+            viewToggleButton.textContent = '3D View';
+            isConstellationVisible = false;
+            await loadOwnConstellation();
+            loadingOverlay.style.display = 'none';
         }
     });
+
+    mapToggleButton.addEventListener('click', () => {
+        if (mapContainer.style.display === 'none') {
+            container.style.display = 'none';
+            skyCanvas.style.display = 'none';
+            isConstellationVisible = false;
+            viewToggleButton.style.display = 'none';
+            loadOwnConstellation();
+            mapToggleButton.textContent = 'X';
+            mapContainer.style.display = 'block';
+            saveOwnConstellationData();
+            setMapVisibilityState(true);
+            helpButton.style.display = 'none';
+        } else {
+            mapContainer.style.display = 'none';
+            isConstellationVisible = true;
+            container.style.display = 'block';
+            skyCanvas.style.display = 'none';
+            mapToggleButton.textContent = 'Map';
+            viewToggleButton.style.display = 'block';
+            helpButton.style.display = 'block';
+            loadOwnConstellation();
+            setMapVisibilityState(false);
+        }
+    });
+
 });
 
 
 
-// 별 정보 툴팁 HTML 요소 추가
+
+// Add an HTML element for the star information tooltip
 const starInfoTooltip = document.createElement('div');
 starInfoTooltip.style.position = 'absolute';
 starInfoTooltip.style.top = '10px';
@@ -84,20 +153,20 @@ starInfoTooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
 starInfoTooltip.style.color = 'white';
 starInfoTooltip.style.borderRadius = '5px';
 starInfoTooltip.style.zIndex = '100';
-starInfoTooltip.style.display = 'none'; // 기본적으로 숨김
+starInfoTooltip.style.display = 'none';
 document.body.appendChild(starInfoTooltip);
 
-// 마우스 좌표와 별의 화면 좌표 간의 거리 계산
+// Calculate the distance between the mouse coordinates and the star's screen coordinates
 function getScreenPosition(position) {
-    const vector = position.clone().project(camera); // 3D 좌표를 2D 화면 좌표로 변환
+    const vector = position.clone().project(camera);
     const x = (vector.x + 1) / 2 * window.innerWidth;
     const y = -(vector.y - 1) / 2 * window.innerHeight;
     return { x, y };
 }
 
-// 구면 좌표계로 별의 위치 계산 (적경, 적위 기반)
+// Calculate the star's position in spherical coordinates (based on right ascension and declination)
 function celestialToSpherical(ra, dec, radius) {
-    const raRad = -THREE.MathUtils.degToRad(ra); // 적경을 라디안으로 변환
+    const raRad = -THREE.MathUtils.degToRad(ra);
     const decRad = THREE.MathUtils.degToRad(dec);
 
     const x = radius * Math.cos(decRad) * Math.cos(raRad);
@@ -107,19 +176,19 @@ function celestialToSpherical(ra, dec, radius) {
     return new THREE.Vector3(x, y, z);
 }
 
-// 적경선 및 적위선 추가 함수
+// Function to add right ascension and declination lines
 function addRaDecLines() {
-    const radius = 1000; // 천구의 반지름
-    const raSegments = 12; // 적경선을 30도 간격으로 나눔 (360도 / 30도 = 12개)
-    const decSegments = 6;  // 적위선을 30도 간격으로 나눔 (-90도에서 90도까지 6개)
+    const radius = 1000;
+    const raSegments = 12;
+    const decSegments = 6;
 
-    // 적경선 (RA) 추가
+    // Add RA lines
     for (let i = 0; i < raSegments; i++) {
-        const raAngle = i * 30; // 적경을 30도 간격으로 선을 그림
+        const raAngle = i * 30;
         const raGeometry = new THREE.BufferGeometry();
         const raPositions = [];
         for (let j = 0; j <= 64; j++) {
-            const decAngle = (j / 64) * Math.PI - Math.PI / 2; // -90도에서 90도까지
+            const decAngle = (j / 64) * Math.PI - Math.PI / 2;
             const x = radius * Math.cos(decAngle) * Math.cos(THREE.MathUtils.degToRad(raAngle));
             const y = radius * Math.sin(decAngle);
             const z = radius * Math.cos(decAngle) * Math.sin(THREE.MathUtils.degToRad(raAngle));
@@ -131,13 +200,13 @@ function addRaDecLines() {
         raDecGroup.add(raLine);  // Add line to group
     }
 
-    // 적위선 (DEC) 추가
+    // Add DEC lines
     for (let i = -decSegments; i <= decSegments; i++) {
-        const decAngle = i * 30; // 적위를 30도 간격으로 선을 그림
+        const decAngle = i * 30;
         const decGeometry = new THREE.BufferGeometry();
         const decPositions = [];
         for (let j = 0; j <= 360; j++) {
-            const raAngle = (j / 360) * Math.PI * 2; // 0도에서 360도까지 적경을 그림
+            const raAngle = (j / 360) * Math.PI * 2;
             const x = radius * Math.cos(THREE.MathUtils.degToRad(decAngle)) * Math.cos(raAngle);
             const y = radius * Math.sin(THREE.MathUtils.degToRad(decAngle));
             const z = radius * Math.cos(THREE.MathUtils.degToRad(decAngle)) * Math.sin(raAngle);
@@ -150,35 +219,26 @@ function addRaDecLines() {
     }
 }
 
-let circleOutlineMesh;  // To store the current circle outline
+let circleOutlineMesh;
 
-// Function to create a red circle outline around a star that doesn't scale with FOV
+//Fuction to create circle ouline around the selected star
 function createCircleOutlineAroundStar(starData, starPosition) {
-    // Remove existing circle if it exists
     if (circleOutlineMesh) {
         scene.remove(circleOutlineMesh);
     }
 
-    // Create sprite material using the provided circle texture
     const textureLoader = new THREE.TextureLoader();
     const spriteMaterial = new THREE.SpriteMaterial({
-        map: textureLoader.load('./textures/circle.png'), // 사용할 원 텍스처
+        map: textureLoader.load('./textures/circle.png'),
         color: 0xff0000,
         transparent: true,
         opacity: 0.7
     });
 
-    // Create the sprite
     circleOutlineMesh = new THREE.Sprite(spriteMaterial);
-
-    // Set the initial scale of the sprite
     circleOutlineMesh.starData = starData;
     updateCircleOutlineScale(starData, starPosition);
-
-    // Position the sprite at the star's position
     circleOutlineMesh.position.copy(starPosition);
-
-    // Add the sprite to the scene
     scene.add(circleOutlineMesh);
 }
 
@@ -187,12 +247,8 @@ function updateCircleOutlineScale(starData, starPosition) {
     if (!circleOutlineMesh) return;
     const magnitude = parseFloat(starData.newmag);
     const distance = camera.position.distanceTo(starPosition);
-    const screenSize = 30 * Math.max(Math.exp(-0.2 * magnitude), 0.7); // Desired size relative to screen height
-
-    // Calculate the physical size of the circle based on distance and FOV
+    const screenSize = 30 * Math.max(Math.exp(-0.2 * magnitude), 0.7);
     const scale = (screenSize * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * distance) / (window.innerHeight / 2);
-
-    // Set the scale of the circle outline
     circleOutlineMesh.scale.set(scale, scale, 1);
 }
 
@@ -200,81 +256,75 @@ function updateCircleOutlineScale(starData, starPosition) {
 function removeCircleOutline() {
     if (circleOutlineMesh) {
         scene.remove(circleOutlineMesh);
-        circleOutlineMesh = null;  // Clear the reference
+        circleOutlineMesh = null;
     }
 }
 
-// CSV 파일에서 별 데이터를 불러오는 함수 (전역 변수 starsData에 저장)
-// 데이터 로드 함수 (`loadStarData`)
+// Function to load star data from a CSV file (stored in the global variable starsData)
 async function loadStarData() {
     try {
         const response = await fetch(path);
         const csvText = await response.text();
-        starsData = csvParse(csvText); // CSV 데이터를 파싱하고 전역 변수 starsData에 저장
+        starsData = csvParse(csvText); 
     } catch (error) {
-        console.error('CSV 데이터 로드 중 오류 발생:', error);
-        starsData = []; // 로드 실패 시 빈 배열로 초기화
+        starsData = [];
     }
 }
 
+//Function to create stars
 function createStars(starsData) {
-    const radius = 1000; // 천구의 반지름
+    const radius = 1000;
     const positions = [];
     const colors = [];
     const sizes = [];
-    const originalColors = []; // 초기 색상을 저장하기 위한 배열
+    const originalColors = [];
 
     starsData.forEach(star => {
-        const { mag, newra, newdec, newmag, spectral_type } = star;
+        const { newra, newdec, newmag, spectral_type } = star;
 
-        // 적경과 적위를 기반으로 별의 위치를 계산
         const pos = celestialToSpherical(parseFloat(newra), parseFloat(newdec), radius);
         positions.push(pos.x, pos.y, pos.z);
 
-        // 밝기 등급에 따른 별의 크기 설정
         const magnitude = parseFloat(newmag);
-        const size = Math.max(Math.exp(-0.28 * magnitude), 0.1); // 밝기 등급에 따른 지수 함수 크기
-        sizes.push(size * 200); // 크기 조정
+        const size = Math.exp(-0.28 * magnitude);
+        sizes.push(size * 200);
 
-        // 밝기 등급에 따른 기본 밝기 계산
-        const brightnessFactor = Math.min(30 * Math.pow(10, -0.3 * magnitude), 1.0); // 밝기 등급에 따른 지수 함수 (0 ~ 1 범위로 조정)
+        const brightnessFactor = Math.min(Math.max(0.8, 1 - 0.03 * magnitude), 1);
 
-        // 분광형에 따른 색상 설정 (brightnessFactor를 사용해 색상에 밝기 반영)
         let color;
         switch (spectral_type.charAt(0)) {
             case 'O':
-                color = new THREE.Color(0.5, 0.5, 1.0).multiplyScalar(brightnessFactor); // 파란색
+                color = new THREE.Color(0.5, 0.5, 1.0).multiplyScalar(brightnessFactor);
                 break;
             case 'B':
-                color = new THREE.Color(0.7, 0.7, 1.0).multiplyScalar(brightnessFactor); // 푸른색
+                color = new THREE.Color(0.7, 0.7, 1.0).multiplyScalar(brightnessFactor);
                 break;
             case 'A':
-                color = new THREE.Color(0.9, 0.9, 1.0).multiplyScalar(brightnessFactor); // 청백색
+                color = new THREE.Color(0.9, 0.9, 1.0).multiplyScalar(brightnessFactor);
                 break;
             case 'F':
-                color = new THREE.Color(1.0, 1.0, 0.9).multiplyScalar(brightnessFactor); // 흰색
+                color = new THREE.Color(1.0, 1.0, 0.9).multiplyScalar(brightnessFactor);
                 break;
             case 'G':
-                color = new THREE.Color(1.0, 0.9, 0.7).multiplyScalar(brightnessFactor); // 황백색
+                color = new THREE.Color(1.0, 0.9, 0.7).multiplyScalar(brightnessFactor);
                 break;
             case 'K':
-                color = new THREE.Color(1.0, 0.8, 0.6).multiplyScalar(brightnessFactor); // 주황색
+                color = new THREE.Color(1.0, 0.8, 0.6).multiplyScalar(brightnessFactor);
                 break;
             case 'M':
-                color = new THREE.Color(1.0, 0.7, 0.7).multiplyScalar(brightnessFactor); // 붉은색
+                color = new THREE.Color(1.0, 0.7, 0.7).multiplyScalar(brightnessFactor);
                 break;
             default:
-                color = new THREE.Color(1.0, 1.0, 1.0).multiplyScalar(brightnessFactor); // 기본값: 흰색
+                color = new THREE.Color(1.0, 1.0, 1.0).multiplyScalar(brightnessFactor);
                 break;
         }
-
-        // 초기 색상과 현재 색상 배열에 값 추가
         originalColors.push(color.r, color.g, color.b);
         colors.push(color.r, color.g, color.b);
     });
 
-    // BufferGeometry를 사용해 별의 위치와 색상, 크기를 설정
+    // Set the star positions, colors, and sizes using BufferGeometry
     const geometry = new THREE.BufferGeometry();
+
     const positionArray = new Float32Array(positions);
     geometry.setAttribute('position', new THREE.BufferAttribute(positionArray, 3));
 
@@ -284,10 +334,9 @@ function createStars(starsData) {
     const sizeArray = new Float32Array(sizes);
     geometry.setAttribute('size', new THREE.BufferAttribute(sizeArray, 1));
 
-    // 초기 색상을 저장한 배열을 geometry에 추가
     geometry.setAttribute('originalColor', new THREE.BufferAttribute(new Float32Array(originalColors), 3));
 
-    // ShaderMaterial을 사용해 별을 생성
+    // Create stars using ShaderMaterial
     const material = new THREE.ShaderMaterial({
         uniforms: {
             pointTexture: { value: new THREE.TextureLoader().load('./textures/star.png') },
@@ -296,23 +345,14 @@ function createStars(starsData) {
         vertexShader: `
             attribute float size;
             varying vec3 vColor;
-            uniform float projectionType;
-            uniform mat4 orthographicMatrix;
 
             void main() {
                 vColor = color;
                 vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-
-                // 투영 타입에 따라 직교 또는 기본 투영 선택
                 vec4 projectedPosition = mvPosition;
-                if (projectionType == 1.0) {
-                    projectedPosition = orthographicMatrix * mvPosition; // 직교 투영
-                }
-
-                // 화면 공간으로 변환된 z 좌표를 기반으로 크기 보정
                 float dist = length(mvPosition.xyz);
-                gl_PointSize = size * (100.0 / dist); // 거리에 따라 점 크기 보정
-                gl_PointSize = clamp(gl_PointSize, 1.0, 50.0); // 최소/최대 크기 제한
+                gl_PointSize = size * (100.0 / dist);
+                gl_PointSize = clamp(gl_PointSize, 1.0, 50.0);
                 gl_Position = projectionMatrix * projectedPosition;
             }
         `,
@@ -321,31 +361,32 @@ function createStars(starsData) {
             varying vec3 vColor;
 
             void main() {
-                gl_FragColor = vec4(vColor, 1.0);
-                gl_FragColor = gl_FragColor * texture2D(pointTexture, gl_PointCoord);
-            }
+            vec4 color = vec4(vColor, 1.0) * texture2D(pointTexture, gl_PointCoord);
+            if (color.a < 0.5) discard;
+            gl_FragColor = color;
+        }
         `,
         vertexColors: true,
-        transparent: true
+        transparent: true,
+        lights: false,
+        alphaTest: 0.5
     });
 
     stars = new THREE.Points(geometry, material);
     scene.add(stars);
 }
 
-// 마우스 클릭 좌표와 지정한 mag 등급보다 밝은 별들 중 가장 가까운 별을 찾기 함수
+// Function to find the closest star to the mouse click coordinates among stars brighter than the specified magnitude
 function findClosestStar(mouseX, mouseY, maxMagnitude) {
     let closestStar = null;
     let minDistance = Infinity;
 
     const positions = stars.geometry.attributes.position.array;
     
-    // Loop through all stars in the data and filter by magnitude
     for (let i = 0; i < positions.length; i += 3) {
-        const starData = starsData[i / 3]; // Get the star data from the starsData array
-        const magnitude = parseFloat(starData.newmag); // Get the magnitude of the star
+        const starData = starsData[i / 3];
+        const magnitude = parseFloat(starData.newmag);
 
-        // Only consider stars with a magnitude brighter (lower) than maxMagnitude
         if (magnitude <= maxMagnitude) {
             const starPosition = new THREE.Vector3(positions[i], positions[i + 1], positions[i + 2]);
             const screenPos = getScreenPosition(starPosition);
@@ -354,7 +395,6 @@ function findClosestStar(mouseX, mouseY, maxMagnitude) {
             const dy = screenPos.y - mouseY;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
-            // Update closest star if this one is closer
             if (distance < minDistance) {
                 minDistance = distance;
                 closestStar = { index: i / 3, screenPos };
@@ -387,26 +427,23 @@ function degreesToHMS(degrees) {
 }
 
 function getStarDisplayName(starData) {
-    // Check if the 'proper' property exists and is not null or undefined
     if (starData.proper) {
-        return `${starData.proper} (${starData.name})`;  // Return proper(name) format
+        return `${starData.proper} (${starData.name})`;
     } else {
-        return starData.name;  // Return name only if proper doesn't exist
+        return starData.name;
     }
 }
 
-// 마우스 우클릭 이벤트 처리
 window.addEventListener('contextmenu', (event) => {
     event.preventDefault();
-
     const closestStar = findClosestStar(event.clientX, event.clientY, 6);
     removeCircleOutline();
 
     if (closestStar && starsData) {
-        const starData = starsData[closestStar.index]; // starsData에서 해당 별의 데이터를 가져옴
+        const starData = starsData[closestStar.index];
 
         if (starData) {
-            // 별 정보를 툴팁에 표시
+            // Display star information in the tooltip
             starInfoTooltip.innerHTML = `
                 <strong>${getStarDisplayName(starData)}</strong><br>
                 Constellation: ${starData.con}<br>
@@ -428,94 +465,112 @@ window.addEventListener('contextmenu', (event) => {
     }
 });
 
-let mousePosition = { x: 0, y: 0 }; // 현재 마우스 위치를 저장하는 변수
-let minSelectionDistance = 13; // 별자리와의 최소 선택 거리
+let mousePosition = { x: 0, y: 0 };
+let minSelectionDistance = 10;
 
-// 마우스 이동 시 현재 마우스 위치를 저장
+// Store the current mouse position when the mouse moves
 window.addEventListener('mousemove', (event) => {
     mousePosition.x = event.clientX;
     mousePosition.y = event.clientY;
 
     constellationLinesGroup.children.forEach(line => {
-        if (line !== blinkingCircle) {
-            line.material.opacity = 1.0;
-            line.material.transparent = true;
-            line.material.needsUpdate = true;
+        if (line instanceof THREE.Line) {
+            if (!blinkingCircles.includes(line)) {
+                line.material.opacity = 1.0;
+                line.material.transparent = true;
+                line.material.needsUpdate = true;
+            }
         }
     });
 
-    // 가장 가까운 별자리를 찾고, 거리가 1보다 작으면 투명도를 낮춤
     const { closestLine, minDistance } = findClosestLine(mousePosition.x, mousePosition.y);
 
     if (closestLine && minDistance < minSelectionDistance) {
-        if (closestLine !== blinkingCircle){
-            closestLine.material.transparent = true;
-            closestLine.material.opacity = 0.5; 
-            closestLine.material.needsUpdate = true; // 업데이트 필요
-        }
+        closestLine.material.transparent = true;
+        closestLine.material.opacity = 0.5; 
+        closestLine.material.needsUpdate = true;
     }
 });
 
-// 마우스를 클릭했을 때 가장 가까운 별자리를 깜빡이도록 설정
+// Set the closest constellation to blink when the mouse is clicked
+let blinkingCircles = [];
+
 window.addEventListener('click', (event) => {
     const { closestLine, minDistance } = findClosestLine(mousePosition.x, mousePosition.y);
 
     if (closestLine && minDistance < minSelectionDistance) {
-        // 이전에 깜빡이고 있던 대원이 있다면 투명도 초기화
-        if (blinkingCircle) {
-            blinkingCircle = null;
-        }
+        const index = blinkingCircles.indexOf(closestLine);
 
-        // 새로 깜빡이는 대원 설정
-        blinkingCircle = closestLine;
-        blinkingCircle.material.transparent = true; // 투명도 조절을 위해 transparent를 true로 설정
+        if (index > -1) {
+            blinkingCircles.splice(index, 1);
+            closestLine.material.opacity = 1.0;
+            closestLine.material.needsUpdate = true;
+        } else {
+            blinkingCircles.push(closestLine);
+            closestLine.material.transparent = true;
+        }
     }
 });
 
-
-
-
-// FOV 조정 함수 (스크롤 이벤트를 통해 FOV를 조정)
+// FOV adjustment function (adjust FOV through scroll events)
 function adjustFOV(event) {
-    const zoomSpeed = 1; // 줌 속도
-    const fovMin = 10; // 최소 FOV 값
-    const fovMax = 75; // 최대 FOV 값
+    const zoomSpeed = 1;
+    const fovMin = 10;
+    const fovMax = 75;
 
-    // 스크롤 방향에 따라 FOV 조정
     if (event.deltaY > 0) {
         camera.fov = Math.min(fovMax, camera.fov + zoomSpeed);
     } else {
         camera.fov = Math.max(fovMin, camera.fov - zoomSpeed);
     }
 
-    camera.updateProjectionMatrix(); // 변경된 FOV를 반영
+    camera.updateProjectionMatrix();
     controls.rotateSpeed = camera.fov / 75;
     if (circleOutlineMesh) {
         updateCircleOutlineScale(circleOutlineMesh.starData, circleOutlineMesh.position);
     }
 }
 
-// 스크롤 이벤트 리스너 추가
+// Add scroll event listener
 window.addEventListener('wheel', adjustFOV);
 
-// 애니메이션 루프
+// Function to initiate the camera movement
+function rotateCameraToStar(position, starData) {
+    starInfoTooltip.innerHTML = `
+    <strong>${getStarDisplayName(starData)}</strong><br>
+    Constellation: ${starData.con}<br>
+    Right Ascension: ${degreesToHMS(parseFloat(starData.newra))}<br>
+    Declination: ${degreesToDMS(parseFloat(starData.newdec))}<br>
+    Apperent Mag.: ${parseFloat(starData.newmag).toFixed(2)}<br>
+    Absolute Mag.: ${parseFloat(starData.absmag).toFixed(2)}<br>
+    Distance: ${Number(parseFloat(starData.newdist).toPrecision(3))} pc <br>
+    Temperature: ${parseFloat(starData.temperature).toFixed(0)}K
+    `;
+    starInfoTooltip.style.display = 'block';
+    createCircleOutlineAroundStar(starData, position);
+}
+
+// Animation loop
 function animate() {
     requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
     if (circleOutlineMesh) {
         updateCircleOutlineScale(circleOutlineMesh.starData, circleOutlineMesh.position);
     }
     updateBlinkingStar();
-    updateBlinkingCircle();
+    updateBlinkingCircles();
+
+    controls.update();
+    renderer.render(scene, camera);
+    labelRenderer.render(scene, camera);
 }
 
-// 윈도우 리사이즈 처리
+// Handle window resize
 window.addEventListener('resize', () => {
     const aspect = window.innerWidth / window.innerHeight;
     camera.aspect = aspect;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
 });
 
 // Add event listener for "D" key to toggle RA/DEC lines
@@ -525,18 +580,35 @@ window.addEventListener('keydown', (event) => {
     }
 
     if (event.key === 'C' || event.key === 'c' || event.key === 'ㅊ') {
-        constellationLinesGroup.clear()
-        isConstellationVisible = !isConstellationVisible; // 상태 토글
+        if (skyCanvas.style.display === 'none') {
+            isConstellationVisible = !isConstellationVisible;
+            loadOwnConstellation();
+        }
     }
     
     if (event.code === 'Backspace') {
-        if (blinkingCircle) {
-            const lineIndex = constellationLinesGroup.children.indexOf(blinkingCircle);
-            if (lineIndex >= 0) {
-                ownConstellationData.splice(lineIndex, 1); // 해당 데이터를 제거
-                saveOwnConstellationData(); // 업데이트된 데이터를 로컬 저장소에 저장
-                loadOwnConstellation(); // 대원 다시 로드
-            }
+        if (blinkingCircles.length > 0) {
+            blinkingCircles.forEach(circle => {
+                const lineIndex = constellationLinesGroup.children.indexOf(circle);
+                if (lineIndex !== -1) {
+                    if (constellationLinesGroup.children.includes(circle)) {
+                        constellationLinesGroup.remove(circle);
+                        constellationLinesGroup.updateMatrixWorld(true);
+                    }
+                    Object.keys(groupedLines).forEach(name => {
+                        groupedLines[name] = groupedLines[name].filter(line => line !== circle);
+                    });
+    
+                    constellationNamesData = constellationNamesData.filter(data => data.lineIndex !== lineIndex);
+                    ownConstellationData = ownConstellationData.filter((_, index) => index !== lineIndex);
+                }
+            });
+    
+            saveConstellationNamesData();
+            saveOwnConstellationData();
+    
+            blinkingCircles = [];
+            loadOwnConstellation();
         }
     }
 
@@ -545,34 +617,40 @@ window.addEventListener('keydown', (event) => {
         removeCircleOutline();
         stopStarBlinking();
         selectedStars = [];
-        blinkingCircle = null;
+        blinkingCircles = [];
+        constellationNameModal.style.display = 'none';
+        constellationNameModal.style.display = 'none';
+        searchModalOverlay.style.display = 'none';
+        helpModal.style.display = 'none';
+        loadOwnConstellation();
+    }
+
+    if (event.key === 'g' || event.key === 'g' || event.key === 'ㅎ'){
+        isGalaxyVisible = !isGalaxyVisible;
+        toggleMilkyWayVisibility();
         loadOwnConstellation();
     }
 });
 
 let blinkingStarIndex = null;
 let isConstellationVisible = true;
-let blinkingCircle = null; // 현재 깜빡이는 대원
 
-// 대원 데이터를 저장할 배열 (전역 변수로 선언)
 let ownConstellationData = JSON.parse(localStorage.getItem('ownConstellation')) || [];
 
-// 선택된 별 인덱스를 저장할 배열 (전역 변수로 선언)
 let selectedStars = [];
 
-// 대원 데이터를 로컬 스토리지에 저장하는 함수
+// Function to save astronaut data to local storage
 function saveOwnConstellationData() {
     localStorage.setItem('ownConstellation', JSON.stringify(ownConstellationData));
 }
 
-// 대원 데이터 로드 및 렌더링 함수
+let groupedLines = {};
+// Function to load and render data
 function loadOwnConstellation() {
-    // 기존 대원들을 모두 제거하고 다시 그리기
     constellationLinesGroup.clear();
-    if (isConstellationVisible) {
-        // ownConstellationData를 기반으로 대원 다시 그리기
-        ownConstellationData.forEach(data => {
-
+    groupedLines = {};
+    if (isConstellationVisible){
+        ownConstellationData.forEach((data, index) => {
             const star1 = starsData[data.starIndex1];
             const star2 = starsData[data.starIndex2];
             const radius = 1000;
@@ -581,11 +659,9 @@ function loadOwnConstellation() {
             const ra2 = parseFloat(star2.newra);
             const dec2 = parseFloat(star2.newdec);
 
-            // 좌표 변환 시 필요한 라디안 값으로 변환
             const pos1 = celestialToSpherical(ra1, dec1, radius);
             const pos2 = celestialToSpherical(ra2, dec2, radius);
 
-            // 두 위치 사이의 대원 경로를 계산
             function calculateGreatCircle(pos1, pos2, segments = 100) {
                 const points = [];
                 const startVector = pos1.clone().normalize();
@@ -607,24 +683,58 @@ function loadOwnConstellation() {
             greatCircleLine.material.transparent = true;
             constellationLinesGroup.add(greatCircleLine);
 
+            const nameData = constellationNamesData.find(nameData => nameData.lineIndex === index);
+            if (nameData) {
+                if (!groupedLines[nameData.name]) {
+                    groupedLines[nameData.name] = [];
+                }
+                groupedLines[nameData.name].push(greatCircleLine);
+            }
+        });
+
+        Object.keys(groupedLines).forEach(name => {
+            const lines = groupedLines[name];
+            let totalPosition = new THREE.Vector3();
+
+            lines.forEach(line => {
+                const positions = line.geometry.attributes.position.array;
+                const pos1 = new THREE.Vector3(positions[0], positions[1], positions[2]);
+                const pos2 = new THREE.Vector3(positions[positions.length - 3], positions[positions.length - 2], positions[positions.length - 1]);
+                const centerPosition = new THREE.Vector3().addVectors(pos1, pos2).multiplyScalar(0.5);
+                totalPosition.add(centerPosition);
+            });
+
+            const averagePosition = totalPosition.divideScalar(lines.length);
+
+            const div = document.createElement('div');
+            div.className = 'label';
+            div.textContent = name;
+            div.style.marginTop = '-1em';
+            div.style.color = '#00ff00';
+            div.style.pointerEvents = 'auto';
+
+            const nameLabel = new CSS2DObject(div);
+            nameLabel.position.set(averagePosition.x, averagePosition.y, averagePosition.z);
+
+            // Add click event to the label
+            div.addEventListener('click', (event) => {
+                event.stopPropagation();
+                changeConstellationColor(name, '#ffff00');
+            });
+            constellationLinesGroup.add(nameLabel);
         });
     }
 }
 
-
-// Shift + 클릭으로 별 선택
 function selectStar(mouseX, mouseY) {
-    const closestStar = findClosestStar(mouseX, mouseY, 6); // 마우스 클릭 위치에서 가장 가까운 별을 찾음
+    const closestStar = findClosestStar(mouseX, mouseY, 6);
     if (closestStar && starsData) {
         const starIndex = closestStar.index;
-        // 선택된 별을 배열에 추가
         selectedStars.push(starIndex);
 
-        // 두 별이 선택되었을 때 대원 데이터 추가
         if (selectedStars.length === 1) {
             blinkingStarIndex = closestStar.index;
             const starData1 = starsData[blinkingStarIndex]
-            // 별 정보를 툴팁에 표시
             starInfoTooltip.innerHTML = `
             <strong>First Star: ${getStarDisplayName(starData1)}</strong><br>
             Constellation: ${starData1.con}<br>
@@ -643,7 +753,6 @@ function selectStar(mouseX, mouseY) {
             saveOwnConstellationData();
             stopStarBlinking();
             const starData2 = starsData[starIndex2]
-            // 별 정보를 툴팁에 표시
             starInfoTooltip.innerHTML = `
             <strong>Second Star: ${getStarDisplayName(starData2)}</strong><br>
             Constellation: ${starData2.con}<br>
@@ -653,22 +762,20 @@ function selectStar(mouseX, mouseY) {
             `;
             starInfoTooltip.style.display = 'block';
 
-            // 선택 초기화
             selectedStars = [];
+            loadOwnConstellation();
         }
     }
 }
 
-// 마우스 클릭 이벤트 핸들러 추가 (Shift + Click으로 별 선택)
 window.addEventListener('click', (event) => {
-    if (event.shiftKey) { // Shift 키가 눌렸을 때만 별을 선택
+    if (event.shiftKey) {
         selectStar(event.clientX, event.clientY);
         removeCircleOutline();
         loadOwnConstellation();
     }
 });
 
-// 모달 요소 생성
 const modalOverlay = document.createElement('div');
 modalOverlay.style.position = 'fixed';
 modalOverlay.style.top = '0';
@@ -691,13 +798,11 @@ modalContent.style.maxWidth = '400px';
 modalContent.style.width = '100%';
 modalOverlay.appendChild(modalContent);
 
-// 모달 내부 텍스트 추가
-const modalText = document.createElement('p');
-modalText.innerText = 'Would you like to load the existing data or start fresh?';
-modalText.style.marginBottom = '20px';
-modalContent.appendChild(modalText);
+const modalText2 = document.createElement('p');
+modalText2.innerText = 'Would you like to load the existing data or start fresh?';
+modalText2.style.marginBottom = '20px';
+modalContent.appendChild(modalText2);
 
-// 'Load Existing Data' 버튼
 const loadButton = document.createElement('button');
 loadButton.innerText = 'Load Existing Data';
 loadButton.style.padding = '10px 20px';
@@ -708,7 +813,6 @@ loadButton.style.border = 'none';
 loadButton.style.cursor = 'pointer';
 modalContent.appendChild(loadButton);
 
-// 'Reset Data' 버튼
 const resetButton = document.createElement('button');
 resetButton.innerText = 'Reset Data';
 resetButton.style.padding = '10px 20px';
@@ -718,30 +822,29 @@ resetButton.style.border = 'none';
 resetButton.style.cursor = 'pointer';
 modalContent.appendChild(resetButton);
 
-// 데이터 로드 함수
 loadButton.addEventListener('click', () => {
     ownConstellationData = JSON.parse(localStorage.getItem('ownConstellation')) || [];
     if (!Array.isArray(ownConstellationData)) {
-        ownConstellationData = []; // 잘못된 데이터인 경우 빈 배열로 초기화
+        ownConstellationData = [];
     }
     loadOwnConstellation();
     closeModal();
 });
 
-// 데이터 리셋 함수
 resetButton.addEventListener('click', () => {
     localStorage.removeItem('ownConstellation');
+    localStorage.removeItem('constellationNames');
     ownConstellationData = [];
+    constellationNamesData = [];
     raDecGroup.children = raDecGroup.children.filter(child => !(child instanceof THREE.Line && child.material.color.equals(new THREE.Color(0x00ff00))));
+    loadOwnConstellation();
     closeModal();
 });
 
-// 모달 닫기 함수
 function closeModal() {
     modalOverlay.style.display = 'none';
 }
 
-// 페이지가 로드될 때 모달을 띄움
 window.addEventListener('load', () => {
     modalOverlay.style.display = 'flex';
 });
@@ -750,113 +853,533 @@ window.addEventListener('load', () => {
 // Function to stop blinking
 function stopStarBlinking() {
     if (blinkingStarIndex !== null && blinkingStarIndex >= 0 && stars) {
-        // 'color' 속성 배열 업데이트
         const colorsArray = stars.geometry.attributes.color.array;
         const originalColorsArray = stars.geometry.attributes.originalColor.array;
 
-        // 선택된 별의 인덱스에 대한 색상 복원 (각 별의 색상은 r, g, b 3개의 값으로 구성됨)
-        const index = blinkingStarIndex * 3; // 각 별의 색상은 r, g, b로 구성되어 있으므로 3을 곱함
+        const index = blinkingStarIndex * 3
 
-        // 원래 색상으로 복원
-        colorsArray[index] = originalColorsArray[index];       // r
-        colorsArray[index + 1] = originalColorsArray[index + 1];   // g
-        colorsArray[index + 2] = originalColorsArray[index + 2];   // b
+        colorsArray[index] = originalColorsArray[index];
+        colorsArray[index + 1] = originalColorsArray[index + 1];
+        colorsArray[index + 2] = originalColorsArray[index + 2];
 
-        // 속성 업데이트 반영
         stars.geometry.attributes.color.needsUpdate = true;
     }
 
-    // Set blinkingStarIndex to null to stop blinking
     blinkingStarIndex = null;
 }
 
-let blinkTime = 0; // 깜빡임을 위한 시간 변수
+let blinkTime = 0;
 function updateBlinkingStar() {
     if (blinkingStarIndex !== null && blinkingStarIndex >= 0 && stars) {
         blinkTime += 0.07;
         const blinkFactor = 0.1 + 0.9 * Math.abs(Math.sin(blinkTime));
 
-        // 'color' 속성 배열 업데이트
         const colorsArray = stars.geometry.attributes.color.array;
         const originalColorsArray = stars.geometry.attributes.originalColor.array;
 
-        // 선택된 별의 인덱스에 대한 색상 업데이트 (각 별의 색상은 r, g, b 3개의 값으로 구성됨)
-        const index = blinkingStarIndex * 3; // 각 별의 색상은 r, g, b로 구성되어 있으므로 3을 곱함
+        const index = blinkingStarIndex * 3;
 
-        // 초기 색상을 기반으로 깜빡임 계수 적용
-        colorsArray[index] = originalColorsArray[index] * blinkFactor;       // r
-        colorsArray[index + 1] = originalColorsArray[index + 1] * blinkFactor;   // g
-        colorsArray[index + 2] = originalColorsArray[index + 2] * blinkFactor;   // b
+        colorsArray[index] = originalColorsArray[index] * blinkFactor;
+        colorsArray[index + 1] = originalColorsArray[index + 1] * blinkFactor;
+        colorsArray[index + 2] = originalColorsArray[index + 2] * blinkFactor;
 
-        // 속성 업데이트 반영
         stars.geometry.attributes.color.needsUpdate = true;
     }
 }
 
 function getCameraRaDec() {
-    // 카메라의 월드 좌표에서 방향 계산
     const direction = new THREE.Vector3();
     camera.getWorldDirection(direction);
 
-    // 카메라의 현재 위치를 구함
     const cameraPosition = new THREE.Vector3();
     camera.getWorldPosition(cameraPosition);
 
-    // 카메라의 위치와 방향을 이용하여 충분히 먼 점을 가정해 계산
-    const targetPosition = cameraPosition.clone().add(direction.multiplyScalar(1000)); // 충분히 큰 값
+    const targetPosition = cameraPosition.clone().add(direction.multiplyScalar(1000));
 
-    // RA와 Dec 계산 (적경과 적위)
     const ra = THREE.MathUtils.radToDeg(Math.atan2(-targetPosition.z, targetPosition.x));
     const dec = THREE.MathUtils.radToDeg(Math.asin(targetPosition.y / targetPosition.length()));
-    // ra를 0-360 범위로 변환
     return { ra, dec };
 }
 
-// 마우스와 대원 간의 거리 계산하여 가장 가까운 대원 찾기
 function findClosestLine(mouseX, mouseY) {
     let closestLine = null;
     let minDistance = Infinity;
 
     constellationLinesGroup.children.forEach(line => {
+    if (line instanceof THREE.Line) {
         const positions = line.geometry.attributes.position.array;
-        let linePoints = [];
 
         for (let i = 0; i < positions.length; i += 3) {
             const segmentPosition = new THREE.Vector3(positions[i], positions[i + 1], positions[i + 2]);
-            linePoints.push(segmentPosition);
+            const screenPos = getScreenPosition(segmentPosition);
+            const dx = screenPos.x - mouseX;
+            const dy = screenPos.y - mouseY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestLine = line;
+            }
         }
+    }
+});
 
-        // 각 대원의 중간점을 계산
-        const midpoint = new THREE.Vector3();
-        linePoints.forEach(point => midpoint.add(point));
-        midpoint.divideScalar(linePoints.length);
-
-        const screenPos = getScreenPosition(midpoint);
-        const dx = screenPos.x - mouseX;
-        const dy = screenPos.y - mouseY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance < minDistance) {
-            minDistance = distance;
-            closestLine = line;
-        }
-    });
 
     return { closestLine, minDistance };
 }
 
+let blinkTime2 = 0;
+function updateBlinkingCircles() {
+    blinkTime2 += 0.07;
+    const blinkFactor = 0.1 + 0.9 * Math.abs(Math.sin(blinkTime2));
+    blinkingCircles.forEach(circle => {
+        circle.material.opacity = blinkFactor;
+        circle.material.needsUpdate = true;
+    });
+}
 
+// Create a modal window element for naming constellations
+const constellationNameModal = document.createElement('div');
+constellationNameModal.style.position = 'fixed';
+constellationNameModal.style.top = '50%';
+constellationNameModal.style.left = '50%';
+constellationNameModal.style.transform = 'translate(-50%, -50%)';
+constellationNameModal.style.backgroundColor = 'white';
+constellationNameModal.style.width = '400px';
+constellationNameModal.style.padding = '15px';
+constellationNameModal.style.borderRadius = '10px';
+constellationNameModal.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
+constellationNameModal.style.zIndex = '1000';
+constellationNameModal.style.display = 'none';
+constellationNameModal.style.maxHeight = '80vh';
+constellationNameModal.style.overflowY = 'auto';
+document.body.appendChild(constellationNameModal);
 
-// 깜빡임 애니메이션 업데이트
-let blinkTime2 = 0; // 깜빡임을 위한 시간 변수
-function updateBlinkingCircle() {
-    if (blinkingCircle) {
-        blinkTime2 += 0.07;
-        const blinkFactor = 0.1 + 0.9 * Math.abs(Math.sin(blinkTime2)); // 0.5 ~ 1 사이의 값으로 깜빡임
-        blinkingCircle.material.opacity = blinkFactor; // 깜빡임 효과 적용
-        blinkingCircle.material.needsUpdate = true; // 재질 업데이트 필요
+const draggableHeader = document.createElement('div');
+draggableHeader.style.width = '100%';
+draggableHeader.style.height = '30px';
+draggableHeader.style.cursor = 'move';
+draggableHeader.style.position = 'absolute';
+draggableHeader.style.top = '0';
+draggableHeader.style.left = '0';
+constellationNameModal.appendChild(draggableHeader);
+
+const closeButton = document.createElement('button');
+closeButton.textContent = 'X';
+closeButton.style.position = 'absolute';
+closeButton.style.top = '5px';
+closeButton.style.right = '10px';
+closeButton.style.backgroundColor = 'transparent';
+closeButton.style.border = 'none';
+closeButton.style.fontSize = '20px';
+closeButton.style.cursor = 'pointer';
+closeButton.style.color = '#333';
+closeButton.addEventListener('mouseenter', () => {
+    closeButton.style.color = 'red'; 
+});
+closeButton.addEventListener('mouseleave', () => {
+    closeButton.style.color = '#333'; 
+});
+closeButton.addEventListener('click', () => {
+    constellationNameModal.style.display = 'none';
+});
+constellationNameModal.appendChild(closeButton);
+
+const modalText = document.createElement('p');
+modalText.textContent = 'Choose a constellation name:';
+modalText.style.marginBottom = '10px';
+constellationNameModal.appendChild(modalText);
+
+const ConSearchInput = document.createElement('input');
+ConSearchInput.type = 'text';
+ConSearchInput.placeholder = 'Search for a name...';
+ConSearchInput.style.width = '90%';
+ConSearchInput.style.marginBottom = '10px';
+ConSearchInput.style.padding = '10px';
+constellationNameModal.appendChild(ConSearchInput);
+
+const nameListContainer = document.createElement('div');
+nameListContainer.style.maxHeight = '300px'; 
+nameListContainer.style.overflowY = 'auto'; 
+nameListContainer.style.border = '1px solid #ddd';
+nameListContainer.style.padding = '10px';
+nameListContainer.style.borderRadius = '5px';
+constellationNameModal.appendChild(nameListContainer);
+
+const addButton = document.createElement('button');
+addButton.textContent = '+ Add new name';
+addButton.style.display = 'block';
+addButton.style.width = '80%';
+addButton.style.margin = '10px auto';
+addButton.style.padding = '10px';
+addButton.style.cursor = 'pointer';
+addButton.style.fontWeight = 'bold';
+constellationNameModal.appendChild(addButton);
+
+// Create a list of names (load from local storage)
+let constellationNamesData = JSON.parse(localStorage.getItem('constellationNames')) || [];
+const nameList = [...new Set(constellationNamesData.map(data => data.name))];
+nameList.sort();
+const nameButtons = [];
+
+function createNameButton(name) {
+    const nameButton = document.createElement('button');
+    nameButton.textContent = name;
+    nameButton.style.display = 'block';
+    nameButton.style.width = '100%';
+    nameButton.style.margin = '5px 0';
+    nameButton.style.padding = '10px';
+    nameButton.style.cursor = 'pointer';
+    nameButton.addEventListener('click', () => {
+        saveConstellationName(name, blinkingCircles);
+        constellationNameModal.style.display = 'none';
+    });
+    nameListContainer.appendChild(nameButton);
+    nameButtons.push(nameButton);
+}
+
+nameList.forEach(name => {
+    createNameButton(name);
+});
+
+ConSearchInput.addEventListener('input', () => {
+    const searchTerm = ConSearchInput.value.toLowerCase();
+    nameButtons.forEach(button => {
+        if (button.textContent.toLowerCase().includes(searchTerm)) {
+            button.style.display = 'block';
+        } else {
+            button.style.display = 'none';
+        }
+    });
+});
+
+addButton.addEventListener('click', () => {
+    const newName = prompt('Enter the new constellation name:');
+    if (newName) {
+        if (!nameList.includes(newName)) {
+            nameList.push(newName);
+            constellationNamesData.push({ name: newName });
+            createNameButton(newName);
+            saveConstellationNamesData();
+            nameList.sort();
+        } else {
+            alert('The name already exists in the list.');
+        }
+    }
+});
+
+let isDragging = false;
+let offsetX, offsetY;
+
+const handleMouseDown = (event) => {
+    isDragging = true;
+    offsetX = event.clientX - constellationNameModal.getBoundingClientRect().left;
+    offsetY = event.clientY - constellationNameModal.getBoundingClientRect().top;
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+};
+
+const handleMouseMove = (event) => {
+    if (isDragging) {
+        constellationNameModal.style.left = `${event.clientX - offsetX}px`;
+        constellationNameModal.style.top = `${event.clientY - offsetY}px`;
+        constellationNameModal.style.transform = ''; // 드래그 중에는 transform 제거
+    }
+};
+
+const handleMouseUp = () => {
+    isDragging = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+};
+
+draggableHeader.addEventListener('mousedown', handleMouseDown);
+
+function saveConstellationName(name, blinkingCircles) {
+    if (blinkingCircles.length > 0) {
+        blinkingCircles.forEach(circle => {
+            const index = constellationLinesGroup.children.indexOf(circle);
+            if (index !== -1) {
+                const existingNameData = constellationNamesData.find(data => data.lineIndex === index);
+                if (existingNameData) {
+                    existingNameData.name = name;
+                } else {
+                    constellationNamesData.push({ lineIndex: index, name });
+                }
+            }
+        });
+
+        loadOwnConstellation();
+        saveConstellationNamesData();
+        blinkingCircles = [];
     }
 }
 
+// Function to save constellation name data to local storage
+function saveConstellationNamesData() {
+    localStorage.setItem('constellationNames', JSON.stringify(constellationNamesData));
+}
 
+window.addEventListener('keydown', (event) => {
+    if (event.key === 'N' || event.key === 'n' || event.key ==='ㅜ') {
+        if (blinkingCircles.length > 0) {
+            ConSearchInput.value = '';
+            nameButtons.forEach(button => button.style.display = 'block');
+            constellationNameModal.style.display = 'block';
+        }
+    }
+});
 
+function changeConstellationColor(name, color) {
+    if (groupedLines[name]) {
+        const lines = groupedLines[name];
+        const isRed = lines.every(line => line.material.color.equals(new THREE.Color(0xffff00)));
+
+        const newColor = isRed ? 0x00ff00 : 0xffff00;
+        lines.forEach(line => {
+            line.material.color.set(newColor);
+            line.material.needsUpdate = true;
+        });
+
+        constellationLinesGroup.children.forEach(child => {
+            if (child instanceof CSS2DObject && child.element.textContent === name) {
+                child.element.style.color = newColor === 0xffff00 ? '#ffff00' : '#00ff00';
+            }
+        });
+    }
+}
+
+// Modal for searching star names
+const searchModalOverlay = document.createElement('div');
+searchModalOverlay.style.position = 'fixed';
+searchModalOverlay.style.top = '0';
+searchModalOverlay.style.left = '0';
+searchModalOverlay.style.width = '100%';
+searchModalOverlay.style.height = '100%';
+searchModalOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+searchModalOverlay.style.display = 'flex';
+searchModalOverlay.style.justifyContent = 'center';
+searchModalOverlay.style.alignItems = 'center';
+searchModalOverlay.style.zIndex = '1000';
+searchModalOverlay.style.display = 'none'; // Initially hidden
+document.body.appendChild(searchModalOverlay);
+
+const searchModalContent = document.createElement('div');
+searchModalContent.style.backgroundColor = '#ffffff';
+searchModalContent.style.padding = '20px';
+searchModalContent.style.borderRadius = '10px';
+searchModalContent.style.textAlign = 'center';
+searchModalContent.style.maxWidth = '400px';
+searchModalContent.style.width = '100%';
+searchModalOverlay.appendChild(searchModalContent);
+
+const searchInput = document.createElement('input');
+searchInput.type = 'text';
+searchInput.placeholder = 'Search for a star...';
+searchInput.style.width = '90%';
+searchInput.style.marginBottom = '10px';
+searchInput.style.padding = '10px';
+searchModalContent.appendChild(searchInput);
+
+const searchResultsContainer = document.createElement('div');
+searchResultsContainer.style.padding = '10px';
+searchResultsContainer.style.border = '1px solid #ddd';
+searchResultsContainer.style.borderRadius = '5px';
+searchModalContent.appendChild(searchResultsContainer);
+
+// Function to filter stars by name and display in the modal
+function searchStarsByName(query) {
+    searchResultsContainer.innerHTML = '';
+    if (query.trim() === '') {
+        return;
+    }
+
+    const results = starsData
+        .filter(star => {
+            const starName = star.proper ? star.proper : star.name;
+            return starName.toLowerCase().includes(query.toLowerCase());
+        })
+        .slice(0, 5);
+
+    results.forEach(star => {
+        const resultButton = document.createElement('button');
+        resultButton.textContent = star.proper ? `${star.proper} (${star.name})` : star.name;
+        resultButton.style.display = 'block';
+        resultButton.style.width = '100%';
+        resultButton.style.margin = '5px 0';
+        resultButton.style.padding = '10px';
+        resultButton.style.cursor = 'pointer';
+        resultButton.addEventListener('click', () => {
+            const starPosition = celestialToSpherical(parseFloat(star.newra), parseFloat(star.newdec), 1000);
+            rotateCameraToStar(starPosition, star);
+            searchModalOverlay.style.display = 'none';
+        });
+        searchResultsContainer.appendChild(resultButton);
+    });
+}
+
+window.addEventListener('keydown', (event) => {
+    if (event.key === 'F' || event.key === 'f') {
+        searchModalOverlay.style.display = 'flex';
+        searchInput.value = '';
+        searchResultsContainer.innerHTML = '';
+        searchInput.focus();
+    }
+});
+
+// Add input event listener to filter stars as the user types
+searchInput.addEventListener('input', () => {
+    searchStarsByName(searchInput.value);
+});
+
+const helpButton = document.createElement('button');
+helpButton.style.position = 'fixed';
+helpButton.style.bottom = '20px';
+helpButton.style.right = '20px';
+helpButton.style.width = '50px';
+helpButton.style.height = '50px';
+helpButton.style.borderRadius = '50%';
+helpButton.style.backgroundColor = '#007bff';
+helpButton.style.color = 'white';
+helpButton.style.border = 'none';
+helpButton.style.cursor = 'pointer';
+helpButton.style.fontSize = '24px';
+helpButton.style.fontWeight = 'bold';
+helpButton.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.3)';
+helpButton.style.transition = 'transform 0.2s, box-shadow 0.2s';
+helpButton.textContent = '?';
+helpButton.style.zIndex = '1000';
+
+document.body.appendChild(helpButton);
+
+const helpModal = document.createElement('div');
+helpModal.style.position = 'fixed';
+helpModal.style.top = '50%';
+helpModal.style.left = '50%';
+helpModal.style.transform = 'translate(-50%, -50%)';
+helpModal.style.backgroundColor = 'white';
+helpModal.style.padding = '30px';
+helpModal.style.borderRadius = '15px';
+helpModal.style.boxShadow = '0 0 15px rgba(0, 0, 0, 0.5)';
+helpModal.style.zIndex = '1000';
+helpModal.style.display = 'none';
+helpModal.style.maxWidth = '500px';
+helpModal.style.width = '100%';
+helpModal.style.fontFamily = 'Arial, sans-serif';
+
+document.body.appendChild(helpModal);
+
+helpModal.innerHTML = `
+    <h3 style="margin-top: 0; text-align: center;">Key Functions</h3>
+    <ul style="list-style: none; padding: 0;">
+        <li style="margin-bottom: 10px;">
+            <span style="display: inline-block; background-color: #f0f0f0; padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #ccc;">C</span> : Toggle constellations
+        </li>
+        <li style="margin-bottom: 10px;">
+            <span style="display: inline-block; background-color: #f0f0f0; padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #ccc;">D</span> : Toggle RA/DEC lines
+        </li>
+        <li style="margin-bottom: 10px;">
+            <span style="display: inline-block; background-color: #f0f0f0; padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #ccc;">G</span> : Toggle Milkyway Texture
+        </li>
+        <li style="margin-bottom: 10px;">
+            <span style="display: inline-block; background-color: #f0f0f0; padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #ccc;">N</span> : Name selected constellation
+        </li>
+        <li style="margin-bottom: 10px;">
+            <span style="display: inline-block; background-color: #f0f0f0; padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #ccc;">F</span> : Search for a star
+        </li>
+        <li style="margin-bottom: 10px;">
+            <span style="display: inline-block; background-color: #f0f0f0; padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #ccc;">Click</span> : Select lines and cancel the selection
+        </li>
+        <li style="margin-bottom: 10px;">
+            <span style="display: inline-block; background-color: #f0f0f0; padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #ccc;">Right-click</span> : Show the information of the star
+        </li>
+        <li style="margin-bottom: 10px;">
+            <span style="display: inline-block; background-color: #f0f0f0; padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #ccc;">Shift + Click</span> : Create a line between the stars
+        </li>
+        <li style="margin-bottom: 10px;">
+            <span style="display: inline-block; background-color: #f0f0f0; padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #ccc;">ESC</span> : Hide tooltips and stop blinking
+        </li>
+
+        <li style="margin-bottom: 10px;">
+            <span style="display: inline-block; background-color: #f0f0f0; padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #ccc;">3D View / 2D View</span> : Change the dimension of the view
+        </li>
+        <li style="margin-bottom: 10px;">
+            <span style="display: inline-block; background-color: #f0f0f0; padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #ccc;">Map</span> : Show the entire map of the sky
+        </li>
+
+    </ul>
+    <button id="closeHelpButton" style="padding: 10px 20px; margin-top: 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);">Close</button>
+`;
+
+helpButton.addEventListener('click', () => {
+    helpModal.style.display = 'block';
+});
+
+helpModal.addEventListener('click', (event) => {
+    const target = event.target;
+
+    if (target.id === 'closeHelpButton') {
+        helpModal.style.display = 'none';
+    }
+});
+
+let milkyWay = null;
+
+function addMilkyWayTexture(galacticNorthRa, galacticNorthDec, galacticCenterRa) {
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.load('./textures/milkyway.png', (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.ClampToEdgeWrapping;
+        texture.repeat.set(1, 1);
+
+        const milkyWayMaterial = new THREE.MeshStandardMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.95,
+            color: 0xffffff
+        });
+
+        const milkyWayRadius  = 1200;
+        const milkyWayHeight = 1600;
+        const milkyWayGeometry = new THREE.CylinderGeometry(
+            milkyWayRadius,
+            milkyWayRadius,
+            milkyWayHeight,
+            128,
+            1,
+            true,
+            0,
+            Math.PI * 2.003
+        );
+    
+        milkyWay = new THREE.Mesh(milkyWayGeometry, milkyWayMaterial);
+
+        const galacticNorthRadRa = THREE.MathUtils.degToRad(galacticNorthRa);
+        const galacticNorthRadDec = THREE.MathUtils.degToRad(galacticNorthDec);
+        const galacticCenterRadRa = THREE.MathUtils.degToRad(galacticCenterRa);
+
+        milkyWay.rotation.order = 'YXZ';
+        milkyWay.rotation.y = -galacticNorthRadRa;
+        milkyWay.rotation.x = galacticNorthRadDec;
+
+        milkyWay.rotateZ(-galacticCenterRadRa);
+
+        if (isGalaxyVisible) {
+            scene.add(milkyWay);
+        }
+    });
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.12);
+    scene.add(ambientLight);
+}
+
+function toggleMilkyWayVisibility() {
+    if (milkyWay) {
+        if (isGalaxyVisible) {
+            scene.add(milkyWay);
+        } else {
+            scene.remove(milkyWay);
+        }
+    }
+}
