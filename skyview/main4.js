@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addRaDecLines();
         animate();
         setMapVisibilityState(false);
-        addMilkyWayTexture(122.932, 27.128, 80.1578);
+        addMilkyWayTexture(192.86, 27.128, 86.416);
 
         loadingOverlay.style.display = 'none';
     }
@@ -232,7 +232,8 @@ function createCircleOutlineAroundStar(starData, starPosition) {
         map: textureLoader.load('./textures/circle.png'),
         color: 0xff0000,
         transparent: true,
-        opacity: 0.7
+        opacity: 0.7,
+        blending: THREE.AdditiveBlending
     });
 
     circleOutlineMesh = new THREE.Sprite(spriteMaterial);
@@ -286,8 +287,8 @@ function createStars(starsData) {
         positions.push(pos.x, pos.y, pos.z);
 
         const magnitude = parseFloat(newmag);
-        const size = Math.exp(-0.28 * magnitude);
-        sizes.push(size * 200);
+        const size = Math.exp(-0.32 * magnitude);
+        sizes.push(size * 600);
 
         const brightnessFactor = Math.min(Math.max(0.8, 1 - 0.03 * magnitude), 1);
 
@@ -436,7 +437,7 @@ function getStarDisplayName(starData) {
 
 window.addEventListener('contextmenu', (event) => {
     event.preventDefault();
-    const closestStar = findClosestStar(event.clientX, event.clientY, 6);
+    const closestStar = findClosestStar(event.clientX, event.clientY, 10);
     removeCircleOutline();
 
     if (closestStar && starsData) {
@@ -727,7 +728,7 @@ function loadOwnConstellation() {
 }
 
 function selectStar(mouseX, mouseY) {
-    const closestStar = findClosestStar(mouseX, mouseY, 6);
+    const closestStar = findClosestStar(mouseX, mouseY, 10);
     if (closestStar && starsData) {
         const starIndex = closestStar.index;
         selectedStars.push(starIndex);
@@ -1355,15 +1356,17 @@ function addMilkyWayTexture(galacticNorthRa, galacticNorthDec, galacticCenterRa)
     
         milkyWay = new THREE.Mesh(milkyWayGeometry, milkyWayMaterial);
 
-        const galacticNorthRadRa = THREE.MathUtils.degToRad(galacticNorthRa);
-        const galacticNorthRadDec = THREE.MathUtils.degToRad(galacticNorthDec);
+        const radius = 1;
+        const galacticNorthVector = celestialToSpherical(galacticNorthRa, galacticNorthDec, radius);
+        
+        const upVector = new THREE.Vector3(0, 1, 0);
+        const quaternion = new THREE.Quaternion().setFromUnitVectors(upVector, galacticNorthVector);
+
+        milkyWay.applyQuaternion(quaternion);
+
         const galacticCenterRadRa = THREE.MathUtils.degToRad(galacticCenterRa);
-
-        milkyWay.rotation.order = 'YXZ';
-        milkyWay.rotation.y = -galacticNorthRadRa;
-        milkyWay.rotation.x = galacticNorthRadDec;
-
-        milkyWay.rotateZ(-galacticCenterRadRa);
+        milkyWay.rotateY(galacticCenterRadRa);
+        milkyWay.rotateY(-Math.PI / 2);
 
         if (isGalaxyVisible) {
             scene.add(milkyWay);
