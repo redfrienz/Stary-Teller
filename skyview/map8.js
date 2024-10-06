@@ -105,7 +105,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const width = window.innerWidth * 0.9;
     const height = window.innerHeight * 0.8;
     const margin = 20;
-    const path = './data/StarCatalogue_TRAPPIST1e.csv;
+    const path = './data/StarCatalogue_TRAPPIST1e.csv';
 
     let raOffset = 0;
 
