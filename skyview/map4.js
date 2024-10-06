@@ -237,7 +237,7 @@ window.addEventListener('DOMContentLoaded', () => {
                             .html(tooltipText);
                     }
                 });
-            const connections = JSON.parse(localStorage.getItem('ownConstellation')) || [];
+            const connections = JSON.parse(localStorage.getItem('ownConstellation4')) || [];
             drawConnections(data, connections);
         });
 
