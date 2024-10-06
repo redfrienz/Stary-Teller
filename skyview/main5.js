@@ -635,13 +635,13 @@ window.addEventListener('keydown', (event) => {
 let blinkingStarIndex = null;
 let isConstellationVisible = true;
 
-let ownConstellationData = JSON.parse(localStorage.getItem('ownConstellation')) || [];
+let ownConstellationData = JSON.parse(localStorage.getItem('ownConstellation5')) || [];
 
 let selectedStars = [];
 
 // Function to save astronaut data to local storage
 function saveOwnConstellationData() {
-    localStorage.setItem('ownConstellation', JSON.stringify(ownConstellationData));
+    localStorage.setItem('ownConstellation5', JSON.stringify(ownConstellationData));
 }
 
 let groupedLines = {};
@@ -823,7 +823,7 @@ resetButton.style.cursor = 'pointer';
 modalContent.appendChild(resetButton);
 
 loadButton.addEventListener('click', () => {
-    ownConstellationData = JSON.parse(localStorage.getItem('ownConstellation')) || [];
+    ownConstellationData = JSON.parse(localStorage.getItem('ownConstellation5')) || [];
     if (!Array.isArray(ownConstellationData)) {
         ownConstellationData = [];
     }
@@ -832,7 +832,7 @@ loadButton.addEventListener('click', () => {
 });
 
 resetButton.addEventListener('click', () => {
-    localStorage.removeItem('ownConstellation');
+    localStorage.removeItem('ownConstellation5');
     localStorage.removeItem('constellationNames');
     ownConstellationData = [];
     constellationNamesData = [];
