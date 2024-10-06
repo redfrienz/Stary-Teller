@@ -5,7 +5,7 @@ import { CSS2DRenderer, CSS2DObject } from './js/CSS2DRenderer.js';
 
 
 // Set a path to the data
-const path = './data/StarCatalogue_ProximaCentaurib.csv';
+const path = './data/StarCatalogue_51Pegasib.csv';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 2000);
