@@ -1,6 +1,6 @@
 let showConstellations = true;
 let stars = [];
-const path = './data/StarCatalogue_HD119445b.csv';
+const path = './data/StarCatalogue_OGLE2003BLG235Lb.csv';
 
 document.addEventListener('DOMContentLoaded', () => {
     const loadingOverlay = document.createElement('div');
