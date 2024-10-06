@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addRaDecLines();
         animate();
         setMapVisibilityState(false);
-        addMilkyWayTexture(122.932, 27.128, 80.1578);
+        addMilkyWayTexture(192.86, 27.128, 262.6);
 
         loadingOverlay.style.display = 'none';
     }
@@ -1355,15 +1355,17 @@ function addMilkyWayTexture(galacticNorthRa, galacticNorthDec, galacticCenterRa)
     
         milkyWay = new THREE.Mesh(milkyWayGeometry, milkyWayMaterial);
 
-        const galacticNorthRadRa = THREE.MathUtils.degToRad(galacticNorthRa);
-        const galacticNorthRadDec = THREE.MathUtils.degToRad(galacticNorthDec);
+        const radius = 1;
+        const galacticNorthVector = celestialToSpherical(galacticNorthRa, galacticNorthDec, radius);
+        
+        const upVector = new THREE.Vector3(0, 1, 0);
+        const quaternion = new THREE.Quaternion().setFromUnitVectors(upVector, galacticNorthVector);
+
+        milkyWay.applyQuaternion(quaternion);
+
         const galacticCenterRadRa = THREE.MathUtils.degToRad(galacticCenterRa);
-
-        milkyWay.rotation.order = 'YXZ';
-        milkyWay.rotation.y = -galacticNorthRadRa;
-        milkyWay.rotation.x = galacticNorthRadDec;
-
-        milkyWay.rotateZ(-galacticCenterRadRa);
+        milkyWay.rotateY(galacticCenterRadRa);
+        milkyWay.rotateY(-Math.PI / 2);
 
         if (isGalaxyVisible) {
             scene.add(milkyWay);
