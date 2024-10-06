@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Combined Sky Viewer</title>
-    <script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+    <title>Exosky in HD 119445 b</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="./skyview3.js" defer></script>
+    <script src="./map3.js" defer></script>
     <script type="module" src="./main3.js" defer></script>
     <style>
         html, body {
@@ -21,7 +22,16 @@
             width: 100vw;
             height: 100vh;
         }
-        #viewToggle {
+        #mapContainer {
+            position: fixed;
+            top: 46%;
+            right: 70%;
+            transform: translateY(-50%);
+            width: 400px;
+            height: auto;
+            padding: 10px;
+        }
+        #viewToggle, #mapToggle {
             position: fixed;
             top: 10px;
             right: 10px;
@@ -31,13 +41,25 @@
             cursor: pointer;
             z-index: 1000;
         }
+        #mapToggle {
+            top: 50px;
+        }
+    </style>
+    
     </style>
 </head>
 <body>
     <canvas id="skyCanvas"></canvas>
     <div id="container"></div>
+    <div id="mapContainer">
+        <h1>Star Map</h1>
+        <div id="tooltip" class="tooltip"></div>
+        <svg id="map"></svg>
+    </div>
     <button id="viewToggle">Switch to 2D View</button>
+    <button id="mapToggle">Map</button>
 
     <div class="tooltip" id="starInfoTooltip"></div>
+    
 </body>
 </html>
